@@ -1,0 +1,18 @@
+{
+  "name": "youtube-subscription-organizer",
+  "version": "0.0.1",
+  "description": "Organize youtube subscription by user-defined categories.",
+  "main": "index.js",
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite serve"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/chrome": "^0.0.243",
+    "typescript": "^5.2.2",
+    "vite": "^4.4.9"
+  }
+}
