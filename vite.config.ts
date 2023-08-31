@@ -1,0 +1,71 @@
+import { defineConfig } from "vite";
+import path, { resolve } from "path";
+import manifest from "./manifest";
+import makeManifest from "./utils/plugins/make-manifest";
+import addHmr from "./utils/plugins/add-hmr";
+import watchRebuild from "./utils/plugins/watch-rebuild";
+
+const rootDir = resolve(__dirname);
+const publicDir = resolve(rootDir, "public");
+const outDir = resolve(rootDir, "dist");
+const srcDir = resolve(rootDir, "src");
+
+const isDev = process.env.__DEV__ === "true";
+const isProduction = !isDev;
+
+// ENABLE HMR IN BACKGROUND SCRIPT
+const enableHmrInBackgroundScript = true;
+
+export default defineConfig({
+  plugins: [
+    makeManifest(manifest, publicDir, outDir, {
+      isDev,
+      contentScriptCssKey: regenerateCacheInvalidationKey(),
+    }),
+    addHmr({ background: enableHmrInBackgroundScript, view: true }),
+    watchRebuild(),
+  ],
+  publicDir,
+  build: {
+    outDir,
+    minify: isProduction,
+    reportCompressedSize: isProduction,
+    rollupOptions: {
+      input: {
+        background: resolve(srcDir, "background.ts"),
+        content: resolve(srcDir, "contentScript.ts"),
+        contentStyle: resolve(srcDir, "style.css"),
+      },
+      output: {
+        entryFileNames: "src/[name]/index.js",
+        chunkFileNames: isDev
+          ? "assets/js/[name].js"
+          : "assets/js/[name].[hash].js",
+        assetFileNames: (assetInfo) => {
+          const { dir, name: _name } = path.parse(assetInfo.name);
+          const assetFolder = dir.split("/").at(-1);
+          const name = assetFolder + firstUpperCase(_name);
+          if (name === "contentStyle") {
+            return `assets/css/contentStyle${cacheInvalidationKey}.chunk.css`;
+          }
+          return `assets/[ext]/${name}.chunk.[ext]`;
+        },
+      },
+    },
+  },
+});
+
+function firstUpperCase(str: string) {
+  const firstAlphabet = new RegExp(/( |^)[a-z]/, "g");
+  return str.toLowerCase().replace(firstAlphabet, (L) => L.toUpperCase());
+}
+
+let cacheInvalidationKey: string = generateKey();
+function regenerateCacheInvalidationKey() {
+  cacheInvalidationKey = generateKey();
+  return cacheInvalidationKey;
+}
+
+function generateKey(): string {
+  return `${(Date.now() / 100).toFixed()}`;
+}

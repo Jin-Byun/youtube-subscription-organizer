@@ -1,15 +1,19 @@
 {
   "compilerOptions": {
+    "noEmit": true,
+    "baseUrl": ".",
     "target": "ESNext",
-    "module": "commonjs",
-    "rootDir": "src",
-    "typeRoots": ["node_modules/@types"],
-    "sourceMap": true,
-    "outDir": "./dist/js",
-    "noEmitOnError": true,
+    "module": "ESNext",
+    "typeRoots": ["./src/global.d.ts", "node_modules/@types"],
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
-    "strict": true,
-    "skipLibCheck": true
-  }
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "paths": {
+      "virtual:reload-on-update-in-background-script": ["./src/global.d.ts"],
+      "virtual:reload-on-update-in-view": ["./src/global.d.ts"]
+    }
+  },
+  "include": ["src", "utils", "vite.config.ts", "node_modules/@types"]
 }
