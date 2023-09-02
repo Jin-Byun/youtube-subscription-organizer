@@ -9,6 +9,7 @@ const manifest: chrome.runtime.ManifestV3 = {
   version: packageJson.version,
   description: packageJson.description,
   permissions: ["storage", "tabs", "scripting", "activeTab"],
+  host_permissions: ["https://*/*"],
   background: {
     service_worker: "src/background/index.js",
     type: "module",
@@ -24,10 +25,9 @@ const manifest: chrome.runtime.ManifestV3 = {
     {
       matches: ["https://*.youtube.com/*"],
       js: ["src/content/index.js"],
-      css: ["assets/css/contentStyle<KEY>.chunk.css"],
+      css: ["assets/css/Styles<KEY>.chunk.css"],
     },
   ],
-  devtools_page: "src/pages/devtools/index.html",
   web_accessible_resources: [
     {
       resources: [

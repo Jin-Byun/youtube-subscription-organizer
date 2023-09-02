@@ -9,8 +9,7 @@ const rootDir = resolve(__dirname);
 const publicDir = resolve(rootDir, "public");
 const outDir = resolve(rootDir, "dist");
 const srcDir = resolve(rootDir, "src");
-
-const isDev = process.env.__DEV__ === "true";
+const isDev = process.env.NODE_ENV === "development";
 const isProduction = !isDev;
 
 // ENABLE HMR IN BACKGROUND SCRIPT
@@ -34,7 +33,7 @@ export default defineConfig({
       input: {
         background: resolve(srcDir, "background.ts"),
         content: resolve(srcDir, "contentScript.ts"),
-        contentStyle: resolve(srcDir, "style.css"),
+        contentStyle: resolve(srcDir, "styles.css"),
       },
       output: {
         entryFileNames: "src/[name]/index.js",
@@ -45,8 +44,8 @@ export default defineConfig({
           const { dir, name: _name } = path.parse(assetInfo.name);
           const assetFolder = dir.split("/").at(-1);
           const name = assetFolder + firstUpperCase(_name);
-          if (name === "contentStyle") {
-            return `assets/css/contentStyle${cacheInvalidationKey}.chunk.css`;
+          if (name === "Styles") {
+            return `assets/css/Styles${cacheInvalidationKey}.chunk.css`;
           }
           return `assets/[ext]/${name}.chunk.[ext]`;
         },
