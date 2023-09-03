@@ -2,7 +2,7 @@ import reloadOnUpdate from "virtual:reload-on-update-in-background-script";
 
 export type SubscriptionMessage = {
   type: string;
-  loaded: boolean;
+  navBarLoaded: boolean;
 };
 
 let isYoutube = false;
@@ -37,10 +37,11 @@ chrome.tabs.onUpdated.addListener(
     }
     if (isYoutube || tabInfo.status !== "complete") return;
     isYoutube = true;
+    console.log(tab.width > 1312);
     chrome.tabs
-      .sendMessage(tabId, {
-        type: "subscription",
-        loaded: true,
+      .sendMessage<SubscriptionMessage>(tabId, {
+        type: "initialize",
+        navBarLoaded: tab.width > 1312,
       })
       .catch((e) => console.log(e));
   }
