@@ -1,3 +1,25 @@
 .yt-organizer-styling {
   font-size: 2em;
 }
+
+#create-new-folder-button {
+  font-size: 1.8em;
+  line-height: 14px;
+  padding-inline: 4px;
+  border-radius: 4px;
+}
+
+.yt-organizer-new-folder {
+  width: 100%;
+  height: 40px;
+  display: flex;
+  justify-content: space-evenly;
+}
+
+.yt-organizer-new-folder div {
+  width: 50%;
+  height: 20px;
+  font-size: 1.4rem;
+  line-height: 2.2rem;
+  padding: 10px;
+}

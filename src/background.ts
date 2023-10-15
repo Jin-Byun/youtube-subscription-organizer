@@ -37,7 +37,6 @@ chrome.tabs.onUpdated.addListener(
     }
     if (isYoutube || tabInfo.status !== "complete") return;
     isYoutube = true;
-    console.log(tab.width > 1312);
     chrome.tabs
       .sendMessage<SubscriptionMessage>(tabId, {
         type: "initialize",
