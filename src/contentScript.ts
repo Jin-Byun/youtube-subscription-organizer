@@ -3,27 +3,29 @@ import refreshOnUpdate from "virtual:reload-on-update-in-view";
 
 refreshOnUpdate("src/content");
 
-function waitForElementLoad(selector: string): Promise<HTMLElement> {
-  return new Promise((resolve) => {
-    if (document.querySelector(selector)) {
-      return resolve(document.querySelector(selector) as HTMLElement);
-    }
+const initializeNavBar = (isLoaded: Boolean): Promise<HTMLElement> => {
+  if (isLoaded) return waitForElementLoad("#sections");
 
-    const observer = new MutationObserver((mutations) => {
-      if (document.querySelector(selector)) {
-        observer.disconnect();
-        resolve(document.querySelector(selector) as HTMLElement);
-      }
+  return new Promise<HTMLElement>((res) => {
+    let navBarTrigger: HTMLElement;
+
+    waitForElementLoad("#guide").then((navBar) => {
+      navBar.style.display = "none"; // hide action being done
+      navBarTrigger = document
+        .getElementById("guide-button")
+        .querySelector("yt-interaction");
+      navBarTrigger.click();
     });
-
-    observer.observe(document.body, {
-      childList: true,
-      subtree: true,
+    waitForElementLoad("#sections").then((section) => {
+      // close the side bar and re-display it
+      navBarTrigger.click();
+      document.getElementById("guide").style.removeProperty("display");
+      res(section);
     });
   });
-}
+};
 
-(() => {
+const main = () => {
   chrome.runtime.onMessage.addListener(
     (
       obj: SubscriptionMessage,
@@ -32,26 +34,8 @@ function waitForElementLoad(selector: string): Promise<HTMLElement> {
     ): void => {
       const { type, navBarLoaded } = obj;
       if (type !== "initialize") return;
-      if (!navBarLoaded) {
-        // open the side bar to load subscription section
-        waitForElementLoad("#guide").then((navBar) => {
-          navBar.style.display = "none"; // hide action being done
-          const navBarTrigger: HTMLElement = document
-            .getElementById("guide-button")
-            .querySelector("yt-interaction");
-          navBarTrigger.click();
-        });
-      }
 
-      waitForElementLoad("#sections").then((section) => {
-        if (!navBarLoaded) {
-          // close the side bar and re-display it
-          const navBarTrigger: HTMLElement = document
-            .getElementById("guide-button")
-            .querySelector("yt-interaction");
-          navBarTrigger.click();
-          document.getElementById("guide").style.removeProperty("display");
-        }
+      initializeNavBar(navBarLoaded).then((section) => {
         // expand subscription section
         const nestedItems = section.querySelectorAll("#expandable-items")[1];
         const subList = nestedItems.closest("#items");
@@ -86,4 +70,26 @@ function waitForElementLoad(selector: string): Promise<HTMLElement> {
       });
     }
   );
-})();
+};
+
+main();
+
+function waitForElementLoad(selector: string): Promise<HTMLElement> {
+  return new Promise((resolve) => {
+    if (document.querySelector(selector)) {
+      return resolve(document.querySelector(selector) as HTMLElement);
+    }
+
+    const observer = new MutationObserver((mutations) => {
+      if (document.querySelector(selector)) {
+        observer.disconnect();
+        resolve(document.querySelector(selector) as HTMLElement);
+      }
+    });
+
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+    });
+  });
+}
