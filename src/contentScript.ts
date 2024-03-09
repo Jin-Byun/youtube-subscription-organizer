@@ -25,12 +25,38 @@ const initializeNavBar = (isLoaded: Boolean): Promise<HTMLElement> => {
   });
 };
 
+const expandSubscription = (nested: Element, list: Element) => {
+  if (nested.parentElement.id !== "expanded") return;
+  const trigger: HTMLElement =
+    nested.parentElement.parentElement.querySelector("yt-interaction");
+  trigger.click();
+  list.append(...nested.children);
+  nested.parentElement.parentElement.remove();
+};
+
+const createNewFolderButton = (list: Element): HTMLButtonElement => {
+  const button = document.createElement("button");
+  button.id = "create-new-folder-button";
+  button.innerText = "+";
+  button.addEventListener("click", () => {
+    // https://developer.mozilla.org/en-US/docs/Web/API/HTML_Drag_and_Drop_API
+    // may skip and just make it so that clicking the item adds to folder.
+    // Consider adding contextmenu event to the sub items to add to new folder.
+    activateChannelContextMenuEvent(list);
+    const subFolder = document.createElement("div");
+    subFolder.className = "yt-organizer-new-folder";
+    subFolder.innerHTML = "<div contenteditable></div><button>Save</button>";
+    list.prepend(subFolder);
+  });
+  return button;
+};
+
 const main = () => {
   chrome.runtime.onMessage.addListener(
     (
       obj: SubscriptionMessage,
-      sender: chrome.runtime.MessageSender,
-      response: (response?: any) => void
+      _sender: chrome.runtime.MessageSender,
+      _response: (response?: any) => void
     ): void => {
       const { type, navBarLoaded } = obj;
       if (type !== "initialize") return;
@@ -38,41 +64,35 @@ const main = () => {
       initializeNavBar(navBarLoaded).then((section) => {
         // expand subscription section
         const nestedItems = section.querySelectorAll("#expandable-items")[1];
-        const subList = nestedItems.closest("#items");
-        if (nestedItems.parentElement.id === "expanded") {
-          const trigger: HTMLElement =
-            nestedItems.parentElement.parentElement.querySelector(
-              "yt-interaction"
-            );
-          trigger.click();
-          subList.append(...nestedItems.children);
-          nestedItems.parentElement.parentElement.remove();
-        }
-        const subListLabel = subList.previousElementSibling as HTMLElement;
-        subListLabel.style.display = "flex";
-        subListLabel.style.alignItems = "center";
-        const createNewFolderButton = document.createElement("button");
-        createNewFolderButton.id = "create-new-folder-button";
-        createNewFolderButton.innerText = "+";
-        createNewFolderButton.addEventListener("click", () => {
-          // https://developer.mozilla.org/en-US/docs/Web/API/HTML_Drag_and_Drop_API
-          // may skip and just make it so that clicking the item adds to folder.
-          // Consider adding contextmenu event to the sub items to add to new folder.
-          // const subs = subList.children;
-          // console.log(subs);
-          const subFolder = document.createElement("div");
-          subFolder.className = "yt-organizer-new-folder";
-          subFolder.innerHTML =
-            "<div contenteditable></div><button>Save</button>";
-          subList.prepend(subFolder);
-        });
-        subListLabel.append(createNewFolderButton);
+        const subscriptionList = nestedItems.closest("#items");
+        expandSubscription(nestedItems, subscriptionList);
+
+        const subscriptionTabLabel =
+          subscriptionList.previousElementSibling as HTMLElement;
+        subscriptionTabLabel.style.display = "flex";
+        subscriptionTabLabel.style.alignItems = "center";
+        subscriptionTabLabel.append(createNewFolderButton(subscriptionList));
       });
     }
   );
 };
 
 main();
+
+function activateChannelContextMenuEvent(list: Element) {
+  const attrName = "newFolderAdd";
+  const subscriptions = list.children;
+  for (const channel of subscriptions) {
+    channel.addEventListener("contextmenu", (e: MouseEvent) => {
+      e.preventDefault();
+      if (!channel.getAttribute(attrName)) {
+        channel.setAttribute(attrName, "true");
+      } else {
+        channel.removeAttribute(attrName);
+      }
+    });
+  }
+}
 
 function waitForElementLoad(selector: string): Promise<HTMLElement> {
   return new Promise((resolve) => {

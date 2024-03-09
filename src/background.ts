@@ -32,7 +32,6 @@ chrome.tabs.onUpdated.addListener(
     tabInfo: chrome.tabs.TabChangeInfo,
     tab: chrome.tabs.Tab
   ) => {
-    console.log("back 34", tab.url, tabInfo.url, tabInfo.status);
     if (!tab.url?.includes("https://www.youtube.com/")) {
       isInitialized = false;
       return;
@@ -43,7 +42,6 @@ chrome.tabs.onUpdated.addListener(
       }
       return;
     }
-    console.log("back 46", tab.url, tabInfo.url, tabInfo.status);
     isInitialized = true;
     chrome.tabs
       .sendMessage<SubscriptionMessage>(tabId, {

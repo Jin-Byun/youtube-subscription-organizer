@@ -23,3 +23,8 @@
   line-height: 2.2rem;
   padding: 10px;
 }
+
+ytd-guide-entry-renderer[newFolderAdd] {
+  border: 1px dashed rgb(0, 0, 0, 0.1);
+  background-color: rgb(255, 50, 50, 0.2);
+}
