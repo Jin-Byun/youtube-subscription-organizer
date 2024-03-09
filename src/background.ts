@@ -5,7 +5,8 @@ export type SubscriptionMessage = {
   navBarLoaded: boolean;
 };
 
-let isYoutube = false;
+const MinWindowWidth = 1312;
+let isInitialized = false;
 
 reloadOnUpdate("src/background");
 
@@ -31,16 +32,23 @@ chrome.tabs.onUpdated.addListener(
     tabInfo: chrome.tabs.TabChangeInfo,
     tab: chrome.tabs.Tab
   ) => {
+    console.log("back 34", tab.url, tabInfo.url, tabInfo.status);
     if (!tab.url?.includes("https://www.youtube.com/")) {
-      isYoutube = false;
+      isInitialized = false;
       return;
     }
-    if (isYoutube || tabInfo.status !== "complete") return;
-    isYoutube = true;
+    if (isInitialized || tabInfo.status !== "complete") {
+      if (!tabInfo.url && tabInfo.status) {
+        isInitialized = false;
+      }
+      return;
+    }
+    console.log("back 46", tab.url, tabInfo.url, tabInfo.status);
+    isInitialized = true;
     chrome.tabs
       .sendMessage<SubscriptionMessage>(tabId, {
         type: "initialize",
-        navBarLoaded: tab.width > 1312,
+        navBarLoaded: tab.width > MinWindowWidth,
       })
       .catch((e) => console.log(e));
   }
