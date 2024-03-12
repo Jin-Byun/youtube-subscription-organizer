@@ -32,6 +32,7 @@ chrome.tabs.onUpdated.addListener(
     tabInfo: chrome.tabs.TabChangeInfo,
     tab: chrome.tabs.Tab
   ) => {
+    console.log(tab.url, isInitialized, tabInfo.status);
     if (!tab.url?.includes("https://www.youtube.com/")) {
       isInitialized = false;
       return;

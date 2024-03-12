@@ -3,35 +3,46 @@ import refreshOnUpdate from "virtual:reload-on-update-in-view";
 
 refreshOnUpdate("src/content");
 
+const SubscriptionExpander =
+  "ytd-guide-collapsible-entry-renderer.ytd-guide-section-renderer";
+
 const initializeNavBar = (isLoaded: Boolean): Promise<HTMLElement> => {
-  if (isLoaded) return waitForElementLoad("#sections");
+  if (isLoaded) return waitForElementLoad(SubscriptionExpander);
 
-  return new Promise<HTMLElement>((res) => {
-    let navBarTrigger: HTMLElement;
+  let navBarTrigger: HTMLElement;
 
-    waitForElementLoad("#guide").then((navBar) => {
-      navBar.style.display = "none"; // hide action being done
-      navBarTrigger = document
-        .getElementById("guide-button")
-        .querySelector("yt-interaction");
-      navBarTrigger.click();
-    });
-    waitForElementLoad("#sections").then((section) => {
-      // close the side bar and re-display it
-      navBarTrigger.click();
-      document.getElementById("guide").style.removeProperty("display");
-      res(section);
-    });
+  waitForElementLoad("#guide").then((navBar) => {
+    navBar.style.display = "none"; // hide action being done
+    navBarTrigger = document
+      .getElementById("guide-button")
+      .querySelector("yt-interaction");
+    navBarTrigger.click();
+  });
+  waitForElementLoad("#sections").then(() => {
+    // close the side bar and re-display it
+    navBarTrigger.click();
+    document.getElementById("guide").style.removeProperty("display");
+    return waitForElementLoad(SubscriptionExpander);
   });
 };
 
-const expandSubscription = (nested: Element, list: Element) => {
-  if (nested.parentElement.id !== "expanded") return;
-  const trigger: HTMLElement =
-    nested.parentElement.parentElement.querySelector("yt-interaction");
+const expandSubscription = (expander: Element, list: Element) => {
+  const trigger: HTMLElement = expander.querySelector("yt-interaction");
   trigger.click();
-  list.append(...nested.children);
-  nested.parentElement.parentElement.remove();
+  const expandedItems = expander.querySelector("#expandable-items");
+  list.append(...expandedItems.children);
+  expander.remove();
+};
+
+const SaveButton = (): HTMLButtonElement => {
+  const button = document.createElement("button");
+  button.innerText = "Save";
+  button.addEventListener("click", (e: MouseEvent) => {
+    const target = e.target as HTMLElement;
+    const labelDiv = target.previousElementSibling;
+    console.log(labelDiv.textContent);
+  });
+  return button;
 };
 
 const createNewFolderButton = (list: Element): HTMLButtonElement => {
@@ -39,13 +50,11 @@ const createNewFolderButton = (list: Element): HTMLButtonElement => {
   button.id = "create-new-folder-button";
   button.innerText = "+";
   button.addEventListener("click", () => {
-    // https://developer.mozilla.org/en-US/docs/Web/API/HTML_Drag_and_Drop_API
-    // may skip and just make it so that clicking the item adds to folder.
-    // Consider adding contextmenu event to the sub items to add to new folder.
     activateChannelContextMenuEvent(list);
     const subFolder = document.createElement("div");
-    subFolder.className = "yt-organizer-new-folder";
-    subFolder.innerHTML = "<div contenteditable></div><button>Save</button>";
+    subFolder.className = "yt-organizer-folder new";
+    subFolder.innerHTML = "<div contenteditable>Test</div>";
+    subFolder.append(SaveButton());
     list.prepend(subFolder);
   });
   return button;
@@ -61,11 +70,10 @@ const main = () => {
       const { type, navBarLoaded } = obj;
       if (type !== "initialize") return;
 
-      initializeNavBar(navBarLoaded).then((section) => {
+      initializeNavBar(navBarLoaded).then((expander) => {
         // expand subscription section
-        const nestedItems = section.querySelectorAll("#expandable-items")[1];
-        const subscriptionList = nestedItems.closest("#items");
-        expandSubscription(nestedItems, subscriptionList);
+        const subscriptionList = expander.closest("#items");
+        expandSubscription(expander, subscriptionList);
 
         const subscriptionTabLabel =
           subscriptionList.previousElementSibling as HTMLElement;
@@ -83,12 +91,13 @@ function activateChannelContextMenuEvent(list: Element) {
   const attrName = "newFolderAdd";
   const subscriptions = list.children;
   for (const channel of subscriptions) {
+    channel.setAttribute(attrName, "false");
     channel.addEventListener("contextmenu", (e: MouseEvent) => {
       e.preventDefault();
-      if (!channel.getAttribute(attrName)) {
-        channel.setAttribute(attrName, "true");
+      if (channel.getAttribute(attrName) === "true") {
+        channel.setAttribute(attrName, "false");
       } else {
-        channel.removeAttribute(attrName);
+        channel.setAttribute(attrName, "true");
       }
     });
   }
