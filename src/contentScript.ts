@@ -5,6 +5,11 @@ refreshOnUpdate("src/content");
 
 const SubscriptionExpander =
   "ytd-guide-collapsible-entry-renderer.ytd-guide-section-renderer";
+const ChannelTag = "ytd-guide-entry-renderer";
+const ExpandClass = "click-2-expand";
+const FolderIcon = "Icon_folder_2019_1.svg";
+const attrName = "newFolderAdd";
+const active = document.createAttribute("active");
 
 const initializeNavBar = (isLoaded: Boolean): Promise<HTMLElement> => {
   if (isLoaded) return waitForElementLoad(SubscriptionExpander);
@@ -34,13 +39,28 @@ const expandSubscription = (expander: Element, list: Element) => {
   expander.remove();
 };
 
-const SaveButton = (): HTMLButtonElement => {
+const SaveButton = (subList: Element): HTMLButtonElement => {
   const button = document.createElement("button");
   button.innerText = "Save";
   button.addEventListener("click", (e: MouseEvent) => {
     const target = e.target as HTMLElement;
     const labelDiv = target.previousElementSibling;
-    console.log(labelDiv.textContent);
+    const title = labelDiv.textContent;
+    const subFolder = document.createElement("div");
+    subFolder.addEventListener("click", hideElement);
+    const folderImg = document.createElement("img");
+    folderImg.src = chrome.runtime.getURL(FolderIcon);
+    folderImg.className = ExpandClass;
+    subFolder.className = "yt-organizer-folder";
+    subFolder.innerHTML = `<div class="${ExpandClass}">${title}</div><p class="${ExpandClass}"></p>`;
+    subFolder.prepend(folderImg);
+
+    const selectedSubs = subList.querySelectorAll(`[${attrName}="true"]`);
+    subFolder.style.setProperty("--number-of-ch", `${selectedSubs.length}`);
+    deactivateContextMenuEvent(subList);
+    subFolder.append(...selectedSubs);
+    subList.prepend(subFolder);
+    target.parentElement.remove();
   });
   return button;
 };
@@ -54,7 +74,7 @@ const createNewFolderButton = (list: Element): HTMLButtonElement => {
     const subFolder = document.createElement("div");
     subFolder.className = "yt-organizer-folder new";
     subFolder.innerHTML = "<div contenteditable>Test</div>";
-    subFolder.append(SaveButton());
+    subFolder.append(SaveButton(list));
     list.prepend(subFolder);
   });
   return button;
@@ -87,19 +107,42 @@ const main = () => {
 
 main();
 
+function hideElement(this: HTMLDivElement, e: MouseEvent) {
+  const clickedOn = e.target as HTMLElement;
+  if ([ExpandClass, this.className].includes(clickedOn.className)) {
+    this.classList.contains("hide")
+      ? this.classList.remove("hide")
+      : this.classList.add("hide");
+    return;
+  }
+  for (const node of this.querySelectorAll(ChannelTag)) {
+    node.removeAttribute("active");
+  }
+  clickedOn.closest(ChannelTag).setAttributeNode(active);
+}
+
+function deactivateContextMenuEvent(list: Element) {
+  for (const ch of list.children) {
+    ch.removeAttribute(attrName);
+    ch.removeEventListener("contextmenu", handleSubAddition);
+  }
+}
+
+function handleSubAddition(e: MouseEvent) {
+  e.preventDefault();
+  const target = e.target as HTMLElement;
+  const outerElement = target.closest(ChannelTag);
+  if (outerElement.getAttribute(attrName) === "true") {
+    outerElement.setAttribute(attrName, "false");
+  } else {
+    outerElement.setAttribute(attrName, "true");
+  }
+}
+
 function activateChannelContextMenuEvent(list: Element) {
-  const attrName = "newFolderAdd";
-  const subscriptions = list.children;
-  for (const channel of subscriptions) {
+  for (const channel of list.children) {
     channel.setAttribute(attrName, "false");
-    channel.addEventListener("contextmenu", (e: MouseEvent) => {
-      e.preventDefault();
-      if (channel.getAttribute(attrName) === "true") {
-        channel.setAttribute(attrName, "false");
-      } else {
-        channel.setAttribute(attrName, "true");
-      }
-    });
+    channel.addEventListener("contextmenu", handleSubAddition);
   }
 }
 

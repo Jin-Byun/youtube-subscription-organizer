@@ -11,28 +11,67 @@
 
 .yt-organizer-folder {
   width: 100%;
-  height: 30px;
+  height: fit-content;
   display: flex;
-  justify-content: space-evenly;
+  justify-content: space-between;
+  flex-wrap: wrap;
   margin-bottom: 5px;
-}
+  box-shadow: black -5px 6px 4px -8px;
+  overflow: hidden;
+  max-height: calc(35px + calc(var(--number-of-ch) * 40px));
+  transition: 200ms ease-out;
 
-.yt-organizer-folder.new div {
-  width: 50%;
-  height: 20px;
-  font-size: 1.4rem;
-  line-height: 2.2rem;
-  padding: 5px 8px;
-}
+  > img {
+    width: 30px;
+    margin-left: 10px;
+  }
+  > div {
+    width: 50%;
+    height: 20px;
+    font-size: 1.4rem;
+    line-height: 2.2rem;
+    padding: 5px 8px;
+    margin-left: 12px;
+  }
+  > p {
+    font-size: 1.5em;
+    line-height: 3rem;
+    margin-right: 25px;
+    &::after {
+      content: "▲";
+    }
+  }
+  > ytd-guide-entry-renderer {
+    border-left: solid 1px rgba(0, 0, 0, 0.5);
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+  }
 
-.yt-organizer-new-folder.new button {
-  height: 30px;
-  padding: 8px;
+  &.new {
+    > button {
+      height: 30px;
+      padding: 5px 8px;
+      margin-right: 10px;
+    }
+    > div {
+      margin-left: 10px;
+    }
+  }
+
+  &.hide {
+    max-height: 30px;
+
+    > p {
+      &::after {
+        content: "▼";
+      }
+    }
+  }
 }
 
 ytd-guide-entry-renderer[newFolderAdd] {
   outline: 1px dashed rgb(0, 0, 0, 0.2);
 }
 ytd-guide-entry-renderer[newFolderAdd="true"] {
-  background-color: rgb(255, 50, 50, 0.2);
+  background-color: rgb(255, 50, 50, 0.2) !important;
 }
