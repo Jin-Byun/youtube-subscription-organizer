@@ -17,3 +17,11 @@ I have few hobbies/interests. They include programming(Go, Rust, JS/TS, Elixir, 
 - [ ] Store the data
 - [ ] Initialize the Collapsible on navigation
 - [ ] More
+
+## How to use it (for now, it will reset everytime you refresh/open youtube in fresh tab)
+
+1. Get the extension installed in your chrome browser.
+2. Press the [+] button beside **subscriptions**
+3. Name your folder and use right click to select the channels to organize.
+4. Hit save and you have placed your channels in the folder.
+5. close the collapsible by clicking the top row.
