@@ -14,8 +14,12 @@ I have few hobbies/interests. They include programming(Go, Rust, JS/TS, Elixir, 
 - [x] Expand **Subscriptions** tab on navigation
 - [x] Create Collapsibles
 - [x] Move the subscriptions inside the Collapsible
-- [ ] Store the data
+- [x] Store the data
 - [ ] Initialize the Collapsible on navigation
+- [ ] Make delete function
+- [ ] Make edit function
+- [ ] Prevent empty directory
+- [ ] Check the user Id to make sure that the directory is created per id
 - [ ] More
 
 ## How to use it (for now, it will reset everytime you refresh/open youtube in fresh tab)

@@ -11,6 +11,23 @@ const FolderIcon = "Icon_folder_2019_1.svg";
 const attrName = "newFolderAdd";
 const active = document.createAttribute("active");
 
+const localStorageKey = "YSO-KEY";
+
+const storeFolderLocal = (title: string, selected: NodeListOf<Element>) => {
+  let check = localStorage.getItem(localStorageKey);
+  if (!check) {
+    localStorage.setItem(localStorageKey, "{}");
+  }
+  check = localStorage.getItem(localStorageKey);
+  const storedFolders = JSON.parse(check);
+  storedFolders[title] = [];
+  for (const ch of selected) {
+    const anchor = ch.firstElementChild as HTMLAnchorElement;
+    storedFolders[title].push(anchor.href);
+  }
+  localStorage.setItem(localStorageKey, JSON.stringify(storedFolders));
+};
+
 const initializeNavBar = (isLoaded: Boolean): Promise<HTMLElement> => {
   if (isLoaded) return waitForElementLoad(SubscriptionExpander);
 
@@ -46,20 +63,24 @@ const SaveButton = (subList: Element): HTMLButtonElement => {
     const target = e.target as HTMLElement;
     const labelDiv = target.previousElementSibling;
     const title = labelDiv.textContent;
+
     const subFolder = document.createElement("div");
-    subFolder.addEventListener("click", hideElement);
+    subFolder.addEventListener("click", toggleCollapsible);
+    subFolder.className = "yt-organizer-folder";
+    subFolder.innerHTML = `<div class="${ExpandClass}">${title}</div><p class="${ExpandClass}"></p>`;
+
     const folderImg = document.createElement("img");
     folderImg.src = chrome.runtime.getURL(FolderIcon);
     folderImg.className = ExpandClass;
-    subFolder.className = "yt-organizer-folder";
-    subFolder.innerHTML = `<div class="${ExpandClass}">${title}</div><p class="${ExpandClass}"></p>`;
     subFolder.prepend(folderImg);
 
     const selectedSubs = subList.querySelectorAll(`[${attrName}="true"]`);
+    deactivateToggleChannel(subList);
     subFolder.style.setProperty("--number-of-ch", `${selectedSubs.length}`);
-    deactivateContextMenuEvent(subList);
     subFolder.append(...selectedSubs);
+
     subList.prepend(subFolder);
+    storeFolderLocal(title, selectedSubs);
     target.parentElement.remove();
   });
   return button;
@@ -70,7 +91,7 @@ const createNewFolderButton = (list: Element): HTMLButtonElement => {
   button.id = "create-new-folder-button";
   button.innerText = "+";
   button.addEventListener("click", () => {
-    activateChannelContextMenuEvent(list);
+    activateToggleChannel(list);
     const subFolder = document.createElement("div");
     subFolder.className = "yt-organizer-folder new";
     subFolder.innerHTML = "<div contenteditable>Test</div>";
@@ -107,7 +128,7 @@ const main = () => {
 
 main();
 
-function hideElement(this: HTMLDivElement, e: MouseEvent) {
+function toggleCollapsible(this: HTMLDivElement, e: MouseEvent) {
   const clickedOn = e.target as HTMLElement;
   if ([ExpandClass, this.className].includes(clickedOn.className)) {
     this.classList.contains("hide")
@@ -115,34 +136,32 @@ function hideElement(this: HTMLDivElement, e: MouseEvent) {
       : this.classList.add("hide");
     return;
   }
+  // handle active attribute removal
   for (const node of this.querySelectorAll(ChannelTag)) {
     node.removeAttribute("active");
   }
   clickedOn.closest(ChannelTag).setAttributeNode(active);
 }
 
-function deactivateContextMenuEvent(list: Element) {
+function toggleChannel(this: Element, e: MouseEvent) {
+  e.preventDefault();
+  if (this.getAttribute(attrName) === "true") {
+    this.setAttribute(attrName, "false");
+  } else {
+    this.setAttribute(attrName, "true");
+  }
+}
+
+function deactivateToggleChannel(list: Element) {
   for (const ch of list.children) {
     ch.removeAttribute(attrName);
-    ch.removeEventListener("contextmenu", handleSubAddition);
+    ch.removeEventListener("contextmenu", toggleChannel);
   }
 }
-
-function handleSubAddition(e: MouseEvent) {
-  e.preventDefault();
-  const target = e.target as HTMLElement;
-  const outerElement = target.closest(ChannelTag);
-  if (outerElement.getAttribute(attrName) === "true") {
-    outerElement.setAttribute(attrName, "false");
-  } else {
-    outerElement.setAttribute(attrName, "true");
-  }
-}
-
-function activateChannelContextMenuEvent(list: Element) {
-  for (const channel of list.children) {
-    channel.setAttribute(attrName, "false");
-    channel.addEventListener("contextmenu", handleSubAddition);
+function activateToggleChannel(list: Element) {
+  for (const ch of list.children) {
+    ch.setAttribute(attrName, "false");
+    ch.addEventListener("contextmenu", toggleChannel);
   }
 }
 
