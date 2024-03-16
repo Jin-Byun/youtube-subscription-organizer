@@ -15,7 +15,7 @@ I have few hobbies/interests. They include programming(Go, Rust, JS/TS, Elixir, 
 - [x] Create Collapsibles
 - [x] Move the subscriptions inside the Collapsible
 - [x] Store the data
-- [ ] Initialize the Collapsible on navigation
+- [x] Initialize the Collapsible on navigation
 - [ ] Make delete function
 - [ ] Make edit function
 - [ ] Prevent empty directory

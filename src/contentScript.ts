@@ -3,6 +3,10 @@ import refreshOnUpdate from "virtual:reload-on-update-in-view";
 
 refreshOnUpdate("src/content");
 
+type FolderData = {
+  [key: string]: string[];
+};
+
 const SubscriptionExpander =
   "ytd-guide-collapsible-entry-renderer.ytd-guide-section-renderer";
 const ChannelTag = "ytd-guide-entry-renderer";
@@ -10,6 +14,7 @@ const ExpandClass = "click-2-expand";
 const FolderIcon = "Icon_folder_2019_1.svg";
 const attrName = "newFolderAdd";
 const active = document.createAttribute("active");
+const NumberOfChannel = "--number-of-ch";
 
 const localStorageKey = "YSO-KEY";
 
@@ -56,6 +61,20 @@ const expandSubscription = (expander: Element, list: Element) => {
   expander.remove();
 };
 
+const subscriptionFolder = (title: string): HTMLDivElement => {
+  const subFolder = document.createElement("div");
+  subFolder.addEventListener("click", toggleCollapsible);
+  subFolder.className = "yt-organizer-folder hide";
+  subFolder.innerHTML = `<div class="${ExpandClass}">${title}</div><p class="${ExpandClass}"></p>`;
+
+  const folderImg = document.createElement("img");
+  folderImg.src = chrome.runtime.getURL(FolderIcon);
+  folderImg.className = ExpandClass;
+  subFolder.prepend(folderImg);
+
+  return subFolder;
+};
+
 const SaveButton = (subList: Element): HTMLButtonElement => {
   const button = document.createElement("button");
   button.innerText = "Save";
@@ -64,19 +83,11 @@ const SaveButton = (subList: Element): HTMLButtonElement => {
     const labelDiv = target.previousElementSibling;
     const title = labelDiv.textContent;
 
-    const subFolder = document.createElement("div");
-    subFolder.addEventListener("click", toggleCollapsible);
-    subFolder.className = "yt-organizer-folder";
-    subFolder.innerHTML = `<div class="${ExpandClass}">${title}</div><p class="${ExpandClass}"></p>`;
-
-    const folderImg = document.createElement("img");
-    folderImg.src = chrome.runtime.getURL(FolderIcon);
-    folderImg.className = ExpandClass;
-    subFolder.prepend(folderImg);
+    const subFolder = subscriptionFolder(title);
 
     const selectedSubs = subList.querySelectorAll(`[${attrName}="true"]`);
     deactivateToggleChannel(subList);
-    subFolder.style.setProperty("--number-of-ch", `${selectedSubs.length}`);
+    subFolder.style.setProperty(NumberOfChannel, `${selectedSubs.length}`);
     subFolder.append(...selectedSubs);
 
     subList.prepend(subFolder);
@@ -115,7 +126,7 @@ const main = () => {
         // expand subscription section
         const subscriptionList = expander.closest("#items");
         expandSubscription(expander, subscriptionList);
-
+        initializeStoredFolders(subscriptionList);
         const subscriptionTabLabel =
           subscriptionList.previousElementSibling as HTMLElement;
         subscriptionTabLabel.style.display = "flex";
@@ -127,6 +138,25 @@ const main = () => {
 };
 
 main();
+
+function initializeStoredFolders(list: Element) {
+  const check = localStorage.getItem(localStorageKey);
+  if (!check) return;
+  const folders: FolderData = JSON.parse(check);
+  for (const [title, channels] of Object.entries(folders)) {
+    const folder = subscriptionFolder(title);
+    folder.style.setProperty(NumberOfChannel, `${channels.length}`);
+    const nodeList: Element[] = [];
+    for (const node of list.children) {
+      const a = node.firstElementChild as HTMLAnchorElement;
+      if (channels.includes(a.href)) {
+        nodeList.push(node);
+      }
+    }
+    folder.append(...nodeList);
+    list.prepend(folder);
+  }
+}
 
 function toggleCollapsible(this: HTMLDivElement, e: MouseEvent) {
   const clickedOn = e.target as HTMLElement;
