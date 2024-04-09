@@ -15,7 +15,7 @@ const manifest: chrome.runtime.ManifestV3 = {
     type: "module",
   },
   action: {
-    default_title: "My YT Bookmarks",
+    default_title: "My YT Organizer",
     default_icon: "icon-34.png",
   },
   icons: {
