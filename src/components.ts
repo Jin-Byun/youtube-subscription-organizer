@@ -10,7 +10,6 @@ const FolderIcon = "Icon_folder_2019_1.svg";
 const attrName = "newFolderAdd";
 const NumberOfChannel = "--number-of-ch";
 
-
 const active = document.createAttribute("active");
 
 const storeFolderLocal = (title: string, selected: NodeListOf<Element>) => {
@@ -81,6 +80,9 @@ function handleDelete(this: HTMLDivElement, e: MouseEvent) {
   const channels = folder.querySelectorAll(ChannelTag);
   subscriptionTab.lastElementChild.before(...channels);
   folder.remove();
+  const currStored = JSON.parse(localStorage.getItem(localStorageKey));
+  delete currStored[folder.title];
+  localStorage.setItem(localStorageKey, JSON.stringify(currStored));
 }
 
 const editTab = (): HTMLDivElement => {

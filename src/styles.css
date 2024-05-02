@@ -19,7 +19,7 @@
   box-shadow: black -5px 6px 4px -8px;
   overflow: hidden;
   max-height: calc(35px + calc(var(--number-of-ch) * 40px));
-  transition: 200ms ease-out;
+  transition: 200ms ease-in-out;
 
   > img {
     width: 30px;
@@ -54,7 +54,11 @@
       margin-right: 10px;
     }
     > div {
+      min-width: 60%;
+      max-width: 140px;
       margin-left: 10px;
+      font-size: 1.4rem;
+      line-height: 3.2rem;
     }
   }
 
