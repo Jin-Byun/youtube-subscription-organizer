@@ -54,11 +54,17 @@
       margin-right: 10px;
     }
     > div {
-      min-width: 60%;
-      max-width: 140px;
-      margin-left: 10px;
+      width: 140px;
+      padding-left: 10px;
       font-size: 1.4rem;
       line-height: 3.2rem;
+      overflow-x: hidden;
+      white-space: nowrap;
+
+      &:not(:focus):before {
+        content: attr(data-placeholder);
+        font-size: 1.2rem;
+      }
     }
   }
 

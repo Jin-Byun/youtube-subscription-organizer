@@ -104,7 +104,15 @@ export function createNewFolderButton(list: Element): HTMLButtonElement {
     activateToggleChannel(list);
     const subFolder = document.createElement("div");
     subFolder.className = `${FolderClass} new`;
-    subFolder.innerHTML = "<div contenteditable>Test</div>";
+    const labelDiv = document.createElement("div");
+    labelDiv.contentEditable = "true";
+    labelDiv.setAttribute("data-placeholder", "Right click adds channel");
+    function disablePlaceholder() {
+      this.removeAttribute("data-placeholder");
+      this.removeEventListener(disablePlaceholder);
+    }
+    labelDiv.addEventListener("focus", disablePlaceholder);
+    subFolder.append(labelDiv);
     subFolder.append(SaveButton(list));
     list.prepend(subFolder);
   });

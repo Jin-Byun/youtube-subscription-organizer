@@ -34,6 +34,7 @@ const expandSubscription = (expander: Element, list: Element) => {
   const expandedItems = expander.querySelector("#expandable-items");
   list.append(...expandedItems.children);
   expander.remove();
+  sortSubscriptions(list);
 };
 
 const main = () => {
@@ -62,6 +63,21 @@ const main = () => {
 };
 
 main();
+
+function sortSubscriptions(list: Element) {
+  const subscriptions = list.children;
+  const tmp = Array.from(subscriptions);
+  const coll = new Intl.Collator("ko");
+  const extra = tmp.pop();
+  tmp.sort((a, b) => {
+    const aTitle = a.querySelector("a").title;
+    const bTitle = b.querySelector("a").title;
+    // console.log(aTitle, bTitle);
+    return coll.compare(aTitle, bTitle);
+  });
+  tmp.push(extra);
+  list.replaceChildren(...tmp);
+}
 
 function waitForElementLoad(selector: string): Promise<HTMLElement> {
   return new Promise((resolve) => {
