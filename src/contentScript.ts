@@ -1,5 +1,9 @@
 import { SubscriptionMessage } from "./background";
-import { createNewFolderButton, initializeStoredFolders } from "./components";
+import {
+  createNewFolderButton,
+  initializeStoredFolders,
+  sortSubscriptions,
+} from "./components";
 import refreshOnUpdate from "virtual:reload-on-update-in-view";
 
 refreshOnUpdate("src/content");
@@ -54,6 +58,13 @@ const main = () => {
         initializeStoredFolders(subscriptionList);
         const subscriptionTabLabel =
           subscriptionList.previousElementSibling as HTMLElement;
+        const header = subscriptionTabLabel.firstElementChild as HTMLElement;
+        header.style.cursor = "pointer";
+        header.addEventListener("click", () => {
+          document
+            .querySelector(`a[href="/feed/subscriptions"]`)
+            .parentElement.click();
+        });
         subscriptionTabLabel.style.display = "flex";
         subscriptionTabLabel.style.alignItems = "center";
         subscriptionTabLabel.append(createNewFolderButton(subscriptionList));
@@ -63,21 +74,6 @@ const main = () => {
 };
 
 main();
-
-function sortSubscriptions(list: Element) {
-  const subscriptions = list.children;
-  const tmp = Array.from(subscriptions);
-  const coll = new Intl.Collator("ko");
-  const extra = tmp.pop();
-  tmp.sort((a, b) => {
-    const aTitle = a.querySelector("a").title;
-    const bTitle = b.querySelector("a").title;
-    // console.log(aTitle, bTitle);
-    return coll.compare(aTitle, bTitle);
-  });
-  tmp.push(extra);
-  list.replaceChildren(...tmp);
-}
 
 function waitForElementLoad(selector: string): Promise<HTMLElement> {
   return new Promise((resolve) => {

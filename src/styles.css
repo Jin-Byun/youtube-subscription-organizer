@@ -7,6 +7,7 @@
   line-height: 14px;
   padding-inline: 4px;
   border-radius: 4px;
+  cursor: pointer;
 }
 
 .yt-organizer-folder {
@@ -20,7 +21,7 @@
   overflow: hidden;
   max-height: calc(35px + calc(var(--number-of-ch) * 40px));
   transition: 200ms ease-in-out;
-
+  cursor: pointer;
   > img {
     width: 30px;
     margin-left: 10px;
@@ -52,6 +53,7 @@
       height: 30px;
       padding: 5px 8px;
       margin-right: 10px;
+      cursor: pointer;
     }
     > div {
       width: 140px;
@@ -60,7 +62,7 @@
       line-height: 3.2rem;
       overflow-x: hidden;
       white-space: nowrap;
-
+      cursor: text;
       &:not(:focus):before {
         content: attr(data-placeholder);
         font-size: 1.2rem;
@@ -70,7 +72,6 @@
 
   &.hide {
     max-height: 30px;
-
     > p {
       &::after {
         content: "▼";

@@ -79,6 +79,8 @@ function handleDelete(this: HTMLDivElement, e: MouseEvent) {
   const subscriptionTab = folder.parentElement;
   const channels = folder.querySelectorAll(ChannelTag);
   subscriptionTab.lastElementChild.before(...channels);
+  const folders = subscriptionTab.querySelectorAll(`.${FolderClass}`);
+  sortSubscriptions(subscriptionTab, folders);
   folder.remove();
   const currStored = JSON.parse(localStorage.getItem(localStorageKey));
   delete currStored[folder.title];
@@ -200,5 +202,27 @@ function activateToggleChannel(list: Element) {
   for (const ch of list.children) {
     ch.setAttribute(attrName, "false");
     ch.addEventListener("contextmenu", toggleChannel);
+  }
+}
+
+export function sortSubscriptions(
+  list: Element,
+  folders: NodeListOf<Element> | null = null
+) {
+  const subscriptions = list.children;
+  const tmp = Array.from(subscriptions).flatMap((v: Element) =>
+    v.tagName.toLowerCase() === ChannelTag ? v : []
+  );
+  const coll = new Intl.Collator("ko");
+  const extra = tmp.pop();
+  tmp.sort((a, b) => {
+    const aTitle = a.querySelector("a").title;
+    const bTitle = b.querySelector("a").title;
+    return coll.compare(aTitle, bTitle);
+  });
+  tmp.push(extra);
+  list.replaceChildren(...tmp);
+  if (folders !== null) {
+    list.prepend(...folders);
   }
 }

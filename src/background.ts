@@ -15,7 +15,6 @@ chrome.action.onClicked.addListener((tab) => {
   chrome.tabs.update(tab.id, { url: "https://www.youtube.com" });
 });
 
-
 chrome.runtime.onInstalled.addListener(async () => {
   for (const cs of chrome.runtime.getManifest().content_scripts) {
     for (const tab of await chrome.tabs.query({ url: cs.matches })) {
@@ -33,7 +32,6 @@ chrome.tabs.onUpdated.addListener(
     tabInfo: chrome.tabs.TabChangeInfo,
     tab: chrome.tabs.Tab
   ) => {
-    console.log(tab.url, isInitialized, tabInfo.status);
     if (!tab.url?.includes("https://www.youtube.com/")) {
       isInitialized = false;
       return;
@@ -51,5 +49,15 @@ chrome.tabs.onUpdated.addListener(
         navBarLoaded: tab.width > MinWindowWidth,
       })
       .catch((e) => console.log(e));
+  }
+);
+
+const UNSUB_URL = "https://www.youtube.com/youtubei/v1/subscription/*";
+chrome.webRequest.onCompleted.addListener(
+  (r) => {
+    console.log(r);
+  },
+  {
+    urls: [UNSUB_URL],
   }
 );
