@@ -1,9 +1,6 @@
 import { SubscriptionMessage } from "./background";
-import {
-  createNewFolderButton,
-  initializeStoredFolders,
-  sortSubscriptions,
-} from "./components";
+import { createNewFolderButton, initializeStoredFolders } from "./components";
+import { sortSubscriptions, waitForElementLoad } from "./utils";
 import refreshOnUpdate from "virtual:reload-on-update-in-view";
 
 refreshOnUpdate("src/content");
@@ -74,23 +71,3 @@ const main = () => {
 };
 
 main();
-
-function waitForElementLoad(selector: string): Promise<HTMLElement> {
-  return new Promise((resolve) => {
-    if (document.querySelector(selector)) {
-      return resolve(document.querySelector(selector) as HTMLElement);
-    }
-
-    const observer = new MutationObserver((mutations) => {
-      if (document.querySelector(selector)) {
-        observer.disconnect();
-        resolve(document.querySelector(selector) as HTMLElement);
-      }
-    });
-
-    observer.observe(document.body, {
-      childList: true,
-      subtree: true,
-    });
-  });
-}

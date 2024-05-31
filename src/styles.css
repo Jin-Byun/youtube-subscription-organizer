@@ -33,6 +33,11 @@
     line-height: 2.2rem;
     padding: 5px 8px;
     margin-left: 12px;
+
+    &[contenteditable="true"] {
+      background-color: rgb(0, 0, 0, 0.1);
+      cursor: text;
+    }
   }
   > p {
     font-size: 1.5em;
@@ -63,6 +68,12 @@
       overflow-x: hidden;
       white-space: nowrap;
       cursor: text;
+      &[data-placeholder="Right click adds channel"] {
+        background-color: rgb(0, 0, 0, 0.1);
+      }
+      &[data-placeholder="Please set title"] {
+        background-color: rgb(200, 0, 0, 0.2);
+      }
       &:not(:focus):before {
         content: attr(data-placeholder);
         font-size: 1.2rem;
@@ -88,13 +99,12 @@ ytd-guide-entry-renderer[newFolderAdd="true"] {
 }
 
 .YSO-edit-menu {
-  cursor: pointer;
   width: fit-content;
   height: fit-content;
   overflow: hidden;
-  margin-inline: 9px auto;
-  font-size: 1.5rem;
+  margin-inline: 5px auto;
   align-content: center;
+  font-size: 1.5rem;
   word-spacing: 0.6rem;
   font-weight: 700;
   border-radius: 5px;
@@ -102,7 +112,7 @@ ytd-guide-entry-renderer[newFolderAdd="true"] {
   transition: all 300ms;
 
   &[activate] {
-    padding: 3px 5px;
+    padding: 3px 10px;
     max-height: 30px;
   }
 
@@ -111,5 +121,15 @@ ytd-guide-entry-renderer[newFolderAdd="true"] {
   }
   &.edit-YSO-folder {
     background-color: rgba(0, 200, 50, 0.205);
+    &.edit {
+      display: none;
+    }
+  }
+  &.save-YSO-folder {
+    background-color: rgba(0, 200, 50, 0.205);
+    display: none;
+    &.edit {
+      display: block;
+    }
   }
 }
