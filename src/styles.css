@@ -19,8 +19,9 @@
   margin-bottom: 5px;
   box-shadow: black -5px 6px 4px -8px;
   overflow: hidden;
-  max-height: calc(35px + calc(var(--number-of-ch) * 40px));
-  transition: 200ms ease-in-out;
+  max-height: calc(65px + calc(var(--number-of-ch) * 40px));
+  transition-duration: clamp(200ms, calc(var(--number-of-ch) * 60ms), 500ms);
+  transition-timing-function: ease-in-out;
   cursor: pointer;
   > img {
     width: 30px;
@@ -71,7 +72,8 @@
       &[data-placeholder="Right click adds channel"] {
         background-color: rgb(0, 0, 0, 0.1);
       }
-      &[data-placeholder="Please set title"] {
+      &[data-placeholder="Please set title"],
+      &[data-placeholder="Name in use"] {
         background-color: rgb(200, 0, 0, 0.2);
       }
       &:not(:focus):before {
@@ -99,16 +101,16 @@ ytd-guide-entry-renderer[newFolderAdd="true"] {
 }
 
 .YSO-edit-menu {
-  width: fit-content;
-  height: fit-content;
   overflow: hidden;
-  margin-inline: 5px auto;
+  text-align: center;
   align-content: center;
-  font-size: 1.5rem;
-  word-spacing: 0.6rem;
-  font-weight: 700;
-  border-radius: 5px;
+  height: fit-content;
   max-height: 0px;
+  margin-inline: 5px auto;
+  border-radius: 5px;
+  font-size: 1.5rem;
+  font-weight: 700;
+  word-spacing: 0.6rem;
   transition: all 300ms;
 
   &[activate] {
@@ -117,16 +119,34 @@ ytd-guide-entry-renderer[newFolderAdd="true"] {
   }
 
   &.delete-YSO-folder {
+    width: 74px;
     background-color: rgba(255, 0, 0, 0.205);
+    &.edit {
+      display: none;
+    }
   }
   &.edit-YSO-folder {
+    width: 64px;
     background-color: rgba(0, 200, 50, 0.205);
     &.edit {
       display: none;
     }
   }
   &.save-YSO-folder {
-    background-color: rgba(0, 200, 50, 0.205);
+    width: 64px;
+    background-color: rgba(0, 95, 24, 0.605);
+    color: #fef7e7;
+    font-weight: 500;
+    display: none;
+    &.edit {
+      display: block;
+    }
+  }
+  &.cancel-YSO-folder {
+    width: 74px;
+    color: #fef7e7;
+    background-color: rgb(0, 0, 0, 0.4);
+    font-weight: 500;
     display: none;
     &.edit {
       display: block;

@@ -16,13 +16,13 @@ I have few hobbies/interests. They include programming(Go, Rust, JS/TS, Elixir, 
 - [x] Move the subscriptions inside the Collapsible
 - [x] Store the data
 - [x] Initialize the Collapsible on navigation
-- [ ] Make delete function
+- [x] Make delete function
 - [ ] Make edit function
-- [ ] Prevent empty directory
+- [x] Prevent empty directory
 - [ ] Check the user Id to make sure that the directory is created per id
 - [ ] More
 
-## How to use it (for now, it will reset everytime you refresh/open youtube in fresh tab)
+## How to use it
 
 1. Get the extension installed in your chrome browser.
 2. Press the [+] button beside **subscriptions**

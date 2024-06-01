@@ -9,33 +9,21 @@ import {
   LABEL_NOTITLE,
   PLACEHOLDER_ATTR,
   LABEL_NOCHANNEL,
+  LABEL_DUPLICATE,
+  FolderData,
 } from "./constants";
 import {
   handleDelete,
   handleEdit,
+  handleSave,
+  handleCancel,
   deactivateToggleChannel,
   activateToggleChannel,
   toggleCollapsible,
   toggleOption,
 } from "./handlers";
-type FolderData = {
-  [key: string]: string[];
-};
+import { storeFolderLocal, currStored } from "./utils";
 
-const storeFolderLocal = (title: string, selected: NodeListOf<Element>) => {
-  let check = localStorage.getItem(STORAGE_KEY);
-  if (!check) {
-    localStorage.setItem(STORAGE_KEY, "{}");
-  }
-  check = localStorage.getItem(STORAGE_KEY);
-  const storedFolders = JSON.parse(check);
-  storedFolders[title] = [];
-  for (const ch of selected) {
-    const anchor = ch.firstElementChild as HTMLAnchorElement;
-    storedFolders[title].push(anchor.href);
-  }
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(storedFolders));
-};
 const subscriptionFolder = (title: string): HTMLDivElement => {
   const label = `<div class="${EXPAND_CLASS}">${title}</div>`;
   const caret = `<p class="${EXPAND_CLASS}"></p>`;
@@ -51,7 +39,7 @@ const subscriptionFolder = (title: string): HTMLDivElement => {
   folderImg.src = chrome.runtime.getURL(FOLDER_ICON);
   folderImg.className = EXPAND_CLASS;
   subFolder.prepend(folderImg);
-  subFolder.append(deleteTab(), editTab(), saveTab());
+  subFolder.append(deleteTab(), editTab(), cancelTab(), saveTab());
 
   return subFolder;
 };
@@ -66,6 +54,13 @@ const SaveButton = (subList: Element): HTMLButtonElement => {
       labelDiv.setAttribute(PLACEHOLDER_ATTR, LABEL_NOTITLE);
       setTimeout(() => {
         labelDiv.setAttribute(PLACEHOLDER_ATTR, LABEL_PLACEHOLDER);
+      }, 1500);
+      return;
+    }
+    if (currStored() && Object.keys(currStored()).includes(title)) {
+      labelDiv.setAttribute(PLACEHOLDER_ATTR, LABEL_DUPLICATE);
+      setTimeout(() => {
+        labelDiv.setAttribute(PLACEHOLDER_ATTR, "");
       }, 1500);
       return;
     }
@@ -85,7 +80,7 @@ const SaveButton = (subList: Element): HTMLButtonElement => {
     subFolder.append(...selectedSubs);
 
     subList.prepend(subFolder);
-    storeFolderLocal(title, selectedSubs);
+    storeFolderLocal(selectedSubs, title);
     target.parentElement.remove();
   });
   return button;
@@ -106,12 +101,17 @@ const editTab = (): HTMLDivElement => {
 };
 const saveTab = (): HTMLDivElement => {
   const saveTab = document.createElement("div");
-  saveTab.addEventListener("click", () => {
-    console.log("save");
-  });
+  saveTab.addEventListener("click", handleSave);
   saveTab.innerText = "💾 Save";
   saveTab.className = "YSO-edit-menu save-YSO-folder";
   return saveTab;
+};
+const cancelTab = (): HTMLDivElement => {
+  const cancelTab = document.createElement("div");
+  cancelTab.addEventListener("click", handleCancel);
+  cancelTab.innerText = "↻ Cancel";
+  cancelTab.className = "YSO-edit-menu cancel-YSO-folder";
+  return cancelTab;
 };
 
 export function createNewFolderButton(list: Element): HTMLButtonElement {

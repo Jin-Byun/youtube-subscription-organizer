@@ -1,4 +1,25 @@
-import { CHANNEL_TAG } from "./constants";
+import { CHANNEL_TAG, STORAGE_KEY, FolderData } from "./constants";
+
+export function storeFolderLocal(selected: NodeListOf<Element>, title: string) {
+  let check = localStorage.getItem(STORAGE_KEY);
+  if (!check) resetStorage();
+  check = localStorage.getItem(STORAGE_KEY);
+  const storedFolders = JSON.parse(check);
+  storedFolders[title] = [];
+  for (const ch of selected) {
+    const anchor = ch.firstElementChild as HTMLAnchorElement;
+    storedFolders[title].push(anchor.href);
+  }
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(storedFolders));
+}
+
+export function resetStorage() {
+  localStorage.setItem(STORAGE_KEY, "{}");
+}
+
+export function currStored(): FolderData {
+  return JSON.parse(localStorage.getItem(STORAGE_KEY));
+}
 
 export function sortSubscriptions(
   list: Element,

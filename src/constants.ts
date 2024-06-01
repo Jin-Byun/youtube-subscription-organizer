@@ -1,3 +1,7 @@
+export type FolderData = {
+  [key: string]: string[];
+};
+
 export const STORAGE_KEY = "YSO-KEY";
 export const CHANNEL_TAG = "ytd-guide-entry-renderer";
 export const EXPAND_CLASS = "click-2-expand";
@@ -9,3 +13,4 @@ export const PLACEHOLDER_ATTR = "data-placeholder";
 export const LABEL_PLACEHOLDER = "Right click adds channel";
 export const LABEL_NOTITLE = "Please set title";
 export const LABEL_NOCHANNEL = "No channel Selected";
+export const LABEL_DUPLICATE = "Name in use";

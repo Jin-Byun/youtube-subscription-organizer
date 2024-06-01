@@ -4,8 +4,14 @@ import {
   STORAGE_KEY,
   EXPAND_CLASS,
   ATTR_NAME,
+  NUM_CHANNEL,
 } from "./constants";
-import { sortSubscriptions } from "./utils";
+import {
+  sortSubscriptions,
+  storeFolderLocal,
+  resetStorage,
+  currStored,
+} from "./utils";
 
 const active = document.createAttribute("active");
 
@@ -18,8 +24,8 @@ export function handleDelete(this: HTMLDivElement, e: MouseEvent) {
   const folders = subscriptionTab.querySelectorAll(`.${FOLDER_CLASS}`);
   sortSubscriptions(subscriptionTab, folders);
   folder.remove();
-  const currStored = JSON.parse(localStorage.getItem(STORAGE_KEY));
-  delete currStored[folder.title];
+  const storedData = currStored();
+  delete storedData[folder.title];
   localStorage.setItem(STORAGE_KEY, JSON.stringify(currStored));
 }
 
@@ -31,12 +37,86 @@ export function handleEdit(this: HTMLDivElement, e: MouseEvent) {
     .querySelectorAll(".YSO-edit-menu")
     .forEach((v) => v.classList.add("edit"));
   activateToggleChannel(folder.querySelectorAll(CHANNEL_TAG), true);
-  const subscriptionTab = folder.parentElement;
-  activateToggleChannel(subscriptionTab.querySelectorAll(CHANNEL_TAG));
 
   const labelDiv = folder.children[1] as HTMLDivElement;
   labelDiv.contentEditable = "true";
   labelDiv.setAttribute("data-title", labelDiv.textContent);
+
+  const subscriptionTab = folder.parentElement;
+  activateToggleChannel(subscriptionTab.querySelectorAll(CHANNEL_TAG));
+}
+
+export function handleSave(this: HTMLDivElement, e: MouseEvent) {
+  e.preventDefault();
+  const folder = this.parentElement;
+  const labelDiv = folder.children[1] as HTMLDivElement;
+  const currTitle = labelDiv.textContent;
+  const prevTitle = labelDiv.getAttribute("data-title");
+  if (currTitle === "") {
+    const tmp = this.textContent;
+    this.textContent = "no name";
+    setTimeout(() => {
+      this.textContent = tmp;
+    }, 1500);
+    return;
+  }
+  if (
+    Object.keys(currStored()).includes(currTitle) &&
+    currTitle !== prevTitle
+  ) {
+    const tmp = this.textContent;
+    this.textContent = "duplicate";
+    setTimeout(() => {
+      this.textContent = tmp;
+    }, 1500);
+    return;
+  }
+  folder.classList.remove("edit");
+  folder
+    .querySelectorAll(".YSO-edit-menu")
+    .forEach((v) => v.classList.remove("edit"));
+  const channels = folder.querySelectorAll(CHANNEL_TAG);
+
+  const subscriptionTab = folder.parentElement;
+  subscriptionTab.lastElementChild.before(...channels);
+  const selectedSubs = subscriptionTab.querySelectorAll(
+    `[${ATTR_NAME}="true"]`
+  );
+  folder.append(...selectedSubs);
+
+  const allFolders = subscriptionTab.querySelectorAll(`.${FOLDER_CLASS}`);
+  sortSubscriptions(subscriptionTab, allFolders);
+
+  resetStorage();
+  for (const f of allFolders) {
+    const fLabel = f.children[1] as HTMLDivElement;
+    const fTitle = fLabel.textContent;
+    const fChannels = f.querySelectorAll(CHANNEL_TAG);
+    (f as HTMLElement).style.setProperty(NUM_CHANNEL, `${fChannels.length}`);
+    storeFolderLocal(fChannels, fTitle);
+  }
+
+  labelDiv.removeAttribute("contentEditable");
+  labelDiv.removeAttribute("data-title");
+
+  deactivateToggleChannel(subscriptionTab.querySelectorAll(CHANNEL_TAG));
+}
+
+export function handleCancel(this: HTMLDivElement, e: MouseEvent) {
+  e.preventDefault();
+  const folder = this.parentElement;
+  folder.classList.remove("edit");
+  folder
+    .querySelectorAll(".YSO-edit-menu")
+    .forEach((v) => v.classList.remove("edit"));
+
+  const labelDiv = folder.children[1] as HTMLDivElement;
+  labelDiv.textContent = labelDiv.getAttribute("data-title");
+  labelDiv.removeAttribute("contentEditable");
+  labelDiv.removeAttribute("data-title");
+
+  const subscriptionTab = folder.parentElement;
+  deactivateToggleChannel(subscriptionTab.querySelectorAll(CHANNEL_TAG));
 }
 
 // create and append a floating context menu with option for delete and edit
@@ -53,11 +133,6 @@ export function toggleOption(this: HTMLDivElement, e: MouseEvent) {
   for (const tab of editTabs) {
     tab.toggleAttribute("activate");
   }
-  if (editTabs[0].getAttribute("activate") !== null) {
-    this.style.maxHeight = `${this.scrollHeight + 30}px`;
-  } else {
-    this.style.removeProperty("max-height");
-  }
 }
 export function toggleCollapsible(this: HTMLDivElement, e: MouseEvent) {
   const clickedOn = e.target as HTMLElement;
@@ -70,20 +145,7 @@ export function toggleCollapsible(this: HTMLDivElement, e: MouseEvent) {
     return;
   }
   if (this.classList.contains("edit")) return;
-
-  const deleteTab = this.querySelector(".YSO-edit-menu");
-  if (deleteTab.getAttribute("activate") === null) {
-    this.style.removeProperty("max-height");
-  } else {
-    this.style.maxHeight = `${this.scrollHeight + 30}px`;
-  }
-
-  if (this.classList.contains("hide")) {
-    this.classList.remove("hide");
-  } else {
-    this.style.removeProperty("max-height");
-    this.classList.add("hide");
-  }
+  this.classList.toggle("hide");
 }
 
 export function deactivateToggleChannel(
