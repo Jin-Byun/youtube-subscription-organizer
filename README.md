@@ -17,8 +17,9 @@ I have few hobbies/interests. They include programming(Go, Rust, JS/TS, Elixir, 
 - [x] Store the data
 - [x] Initialize the Collapsible on navigation
 - [x] Make delete function
-- [ ] Make edit function
+- [x] Make edit function
 - [x] Prevent empty directory
+- [ ] Respond to subscription change (subscribe, unsubscribe)
 - [ ] Check the user Id to make sure that the directory is created per id
 - [ ] More
 

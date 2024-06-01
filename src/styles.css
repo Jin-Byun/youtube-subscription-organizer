@@ -114,6 +114,7 @@ ytd-guide-entry-renderer[newFolderAdd="true"] {
   transition: all 300ms;
 
   &[activate] {
+    margin-block: 3px;
     padding: 3px 10px;
     max-height: 30px;
   }

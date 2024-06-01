@@ -1,6 +1,6 @@
 {
   "name": "youtube-subscription-organizer",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Organize youtube subscription by user-defined categories.",
   "author": "Jin Byun",
   "license": "MIT",
@@ -19,7 +19,8 @@
   },
   "keywords": [
     "youtube",
-    "subscription"
+    "subscription",
+    "extension"
   ],
   "devDependencies": {
     "@rollup/plugin-typescript": "^11.1.3",
