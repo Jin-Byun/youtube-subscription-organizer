@@ -33,6 +33,7 @@ export default defineConfig({
       input: {
         background: resolve(srcDir, "background.ts"),
         content: resolve(srcDir, "contentScript.ts"),
+        injected: resolve(srcDir, "injected.ts"),
         contentStyle: resolve(srcDir, "styles.css"),
       },
       output: {

@@ -1,4 +1,4 @@
-import { SubscriptionMessage } from "./background";
+import type { SubscriptionMessage } from "./constants";
 import { createNewFolderButton, initializeStoredFolders } from "./components";
 import { sortSubscriptions, waitForElementLoad } from "./utils";
 import refreshOnUpdate from "virtual:reload-on-update-in-view";
@@ -38,7 +38,30 @@ const expandSubscription = (expander: Element, list: Element) => {
   sortSubscriptions(list);
 };
 
+// const subscriptionFlagDiv = document.createElement("div");
+// subscriptionFlagDiv.id = "subscriptionFlagDiv";
+// document.body.appendChild(subscriptionFlagDiv);
+
+// const observer = new MutationObserver((mutations) => {
+//   for (const m of mutations) {
+//     console.log(m);
+//     if (m.type === "attributes") {
+//       const flagDiv = m.target as Element;
+//       console.log(flagDiv.getAttribute("data-subscription"));
+//     }
+//   }
+// });
+
+// observer.observe(subscriptionFlagDiv, { attributes: true });
+
 const main = () => {
+  const s = document.createElement("script");
+  (document.head || document.documentElement).appendChild(s);
+  // s.onload = function () {
+  //   const t = this as HTMLScriptElement;
+  //   t.remove();
+  // };
+  s.src = chrome.runtime.getURL("src/injected/index.js");
   chrome.runtime.onMessage.addListener(
     (
       obj: SubscriptionMessage,
@@ -50,6 +73,7 @@ const main = () => {
 
       initializeNavBar(navBarLoaded).then((expander) => {
         // expand subscription section
+
         const subscriptionList = expander.closest("#items");
         expandSubscription(expander, subscriptionList);
         initializeStoredFolders(subscriptionList);
@@ -66,6 +90,7 @@ const main = () => {
         subscriptionTabLabel.style.alignItems = "center";
         subscriptionTabLabel.append(createNewFolderButton(subscriptionList));
       });
+      // .then(() => injector(injectedScript));
     }
   );
 };

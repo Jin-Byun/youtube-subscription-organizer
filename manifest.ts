@@ -8,7 +8,7 @@ const manifest: chrome.runtime.ManifestV3 = {
   name: packageJson.name,
   version: packageJson.version,
   description: packageJson.description,
-  permissions: ["storage", "tabs", "scripting", "activeTab", "webRequest"],
+  permissions: ["storage", "tabs", "scripting", "activeTab"],
   host_permissions: ["https://*/*"],
   background: {
     service_worker: "src/background/index.js",
@@ -32,6 +32,7 @@ const manifest: chrome.runtime.ManifestV3 = {
     {
       resources: [
         "assets/js/*.js",
+        "src/injected/index.js",
         "assets/css/*.css",
         "icon-128.png",
         "icon-34.png",

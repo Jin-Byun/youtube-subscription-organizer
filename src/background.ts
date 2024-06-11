@@ -1,9 +1,5 @@
 import reloadOnUpdate from "virtual:reload-on-update-in-background-script";
-
-export type SubscriptionMessage = {
-  type: string;
-  navBarLoaded: boolean;
-};
+import type { SubscriptionMessage } from "./constants";
 
 const MinWindowWidth = 1312;
 let isInitialized = false;
@@ -52,12 +48,4 @@ chrome.tabs.onUpdated.addListener(
   }
 );
 
-const UNSUB_URL = "https://www.youtube.com/youtubei/v1/subscription/*";
-chrome.webRequest.onCompleted.addListener(
-  (r) => {
-    console.log(r);
-  },
-  {
-    urls: [UNSUB_URL],
-  }
-);
+const SUB_URL = "https://www.youtube.com/youtubei/v1/subscription/*";

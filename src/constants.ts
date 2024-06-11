@@ -1,6 +1,10 @@
 export type FolderData = {
   [key: string]: string[];
 };
+export type SubscriptionMessage = {
+  type: string;
+  navBarLoaded: boolean;
+};
 
 export const STORAGE_KEY = "YSO-KEY";
 export const CHANNEL_TAG = "ytd-guide-entry-renderer";

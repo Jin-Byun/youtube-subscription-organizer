@@ -49,7 +49,7 @@ export function waitForElementLoad(selector: string): Promise<HTMLElement> {
       return resolve(document.querySelector(selector) as HTMLElement);
     }
 
-    const observer = new MutationObserver((mutations) => {
+    const observer = new MutationObserver((_mutations) => {
       if (document.querySelector(selector)) {
         observer.disconnect();
         resolve(document.querySelector(selector) as HTMLElement);
