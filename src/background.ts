@@ -4,6 +4,11 @@ import type { SubscriptionMessage } from "./constants";
 const MinWindowWidth = 1312;
 let isInitialized = false;
 
+const getCurrentTab = async (): Promise<number> => {
+  const query = { active: true, lastFocusedWindow: true };
+  const [tab] = await chrome.tabs.query(query);
+  return tab.id;
+};
 reloadOnUpdate("src/background");
 
 // adding redirection to youtube onclick of the extension icon
@@ -47,5 +52,19 @@ chrome.tabs.onUpdated.addListener(
       .catch((e) => console.log(e));
   }
 );
-
 const SUB_URL = "https://www.youtube.com/youtubei/v1/subscription/*";
+
+chrome.webRequest.onCompleted.addListener(
+  (details) => {
+    getCurrentTab().then((id) => {
+      const flag = details.url.includes("unsubscribe");
+      chrome.tabs
+        .sendMessage<SubscriptionMessage>(id, {
+          type: "update",
+          navBarLoaded: flag,
+        })
+        .catch((e) => console.error(e));
+    });
+  },
+  { urls: [SUB_URL] }
+);

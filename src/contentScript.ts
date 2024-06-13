@@ -1,6 +1,12 @@
-import type { SubscriptionMessage } from "./constants";
+import { FOLDER_CLASS, type SubscriptionMessage } from "./constants";
 import { createNewFolderButton, initializeStoredFolders } from "./components";
-import { sortSubscriptions, waitForElementLoad } from "./utils";
+import {
+  prependNewSubscription,
+  resetStorage,
+  sortSubscriptions,
+  updateSubscriptionOrder,
+  waitForElementLoad,
+} from "./utils";
 import refreshOnUpdate from "virtual:reload-on-update-in-view";
 
 refreshOnUpdate("src/content");
@@ -35,32 +41,17 @@ const expandSubscription = (expander: Element, list: Element) => {
   const expandedItems = expander.querySelector("#expandable-items");
   list.append(...expandedItems.children);
   expander.remove();
+  updateSubscriptionOrder(list);
   sortSubscriptions(list);
 };
-
-// const subscriptionFlagDiv = document.createElement("div");
-// subscriptionFlagDiv.id = "subscriptionFlagDiv";
-// document.body.appendChild(subscriptionFlagDiv);
-
-// const observer = new MutationObserver((mutations) => {
-//   for (const m of mutations) {
-//     console.log(m);
-//     if (m.type === "attributes") {
-//       const flagDiv = m.target as Element;
-//       console.log(flagDiv.getAttribute("data-subscription"));
-//     }
-//   }
-// });
-
-// observer.observe(subscriptionFlagDiv, { attributes: true });
 
 const main = () => {
   const s = document.createElement("script");
   (document.head || document.documentElement).appendChild(s);
-  // s.onload = function () {
-  //   const t = this as HTMLScriptElement;
-  //   t.remove();
-  // };
+  s.onload = function () {
+    const t = this as HTMLScriptElement;
+    t.remove();
+  };
   s.src = chrome.runtime.getURL("src/injected/index.js");
   chrome.runtime.onMessage.addListener(
     (
@@ -69,28 +60,57 @@ const main = () => {
       _response: (response?: any) => void
     ): void => {
       const { type, navBarLoaded } = obj;
-      if (type !== "initialize") return;
-
-      initializeNavBar(navBarLoaded).then((expander) => {
-        // expand subscription section
-
-        const subscriptionList = expander.closest("#items");
-        expandSubscription(expander, subscriptionList);
-        initializeStoredFolders(subscriptionList);
-        const subscriptionTabLabel =
-          subscriptionList.previousElementSibling as HTMLElement;
-        const header = subscriptionTabLabel.firstElementChild as HTMLElement;
-        header.style.cursor = "pointer";
-        header.addEventListener("click", () => {
-          document
-            .querySelector(`a[href="/feed/subscriptions"]`)
-            .parentElement.click();
-        });
-        subscriptionTabLabel.style.display = "flex";
-        subscriptionTabLabel.style.alignItems = "center";
-        subscriptionTabLabel.append(createNewFolderButton(subscriptionList));
-      });
-      // .then(() => injector(injectedScript));
+      switch (type) {
+        case "initialize":
+          initializeNavBar(navBarLoaded).then((expander) => {
+            // expand subscription section
+            const subscriptionList = expander.closest("#items");
+            subscriptionList.classList.add("yso-subscription-list");
+            expandSubscription(expander, subscriptionList);
+            initializeStoredFolders(subscriptionList);
+            const subscriptionTabLabel =
+              subscriptionList.previousElementSibling as HTMLElement;
+            const header =
+              subscriptionTabLabel.firstElementChild as HTMLElement;
+            header.style.cursor = "pointer";
+            header.addEventListener("click", () => {
+              document
+                .querySelector(`a[href="/feed/subscriptions"]`)
+                .parentElement.click();
+            });
+            subscriptionTabLabel.style.display = "flex";
+            subscriptionTabLabel.style.alignItems = "center";
+            subscriptionTabLabel.append(
+              createNewFolderButton(subscriptionList)
+            );
+          });
+          break;
+        case "update":
+          console.log("flag", navBarLoaded);
+          const subList = document.querySelector(".yso-subscription-list");
+          let allFolders: NodeListOf<Element>;
+          if (navBarLoaded) {
+            // update the original order array
+            updateSubscriptionOrder(subList);
+            // re-sort alphabetically
+            sortSubscriptions(subList);
+            // setup folders
+            initializeStoredFolders(subList);
+            // update storedData in case of folder content change
+            allFolders = subList.querySelectorAll(`.${FOLDER_CLASS}`);
+            resetStorage(allFolders);
+            return;
+          }
+          // new subscription found on top of folders
+          const newSub = subList.firstElementChild;
+          // update order array
+          prependNewSubscription(newSub);
+          // place new subscription below all folders
+          allFolders = subList.querySelectorAll(`.${FOLDER_CLASS}`);
+          if (allFolders.length > 0) {
+            allFolders[allFolders.length - 1].after(newSub);
+          }
+      }
     }
   );
 };

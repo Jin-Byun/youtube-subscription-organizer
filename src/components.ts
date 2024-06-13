@@ -22,7 +22,7 @@ import {
   toggleCollapsible,
   toggleOption,
 } from "./handlers";
-import { storeFolderLocal, currStored } from "./utils";
+import { storeFolderLocal, currStored, resetStorage } from "./utils";
 
 const subscriptionFolder = (title: string): HTMLDivElement => {
   const label = `<div class="${EXPAND_CLASS}">${title}</div>`;
@@ -138,7 +138,7 @@ export function createNewFolderButton(list: Element): HTMLButtonElement {
 }
 export function initializeStoredFolders(list: Element) {
   const check = localStorage.getItem(STORAGE_KEY);
-  if (!check) return;
+  if (!check || check === "undefined") return resetStorage();
   const folders: FolderData = JSON.parse(check);
   for (const [title, channels] of Object.entries(folders)) {
     const folder = subscriptionFolder(title);
@@ -146,7 +146,7 @@ export function initializeStoredFolders(list: Element) {
     const nodeList: Element[] = [];
     for (const node of list.children) {
       const a = node.firstElementChild as HTMLAnchorElement;
-      if (channels.includes(a.href)) {
+      if (channels.includes(a.getAttribute("href"))) {
         nodeList.push(node);
       }
     }

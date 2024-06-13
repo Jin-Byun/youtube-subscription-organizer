@@ -7,6 +7,7 @@ export type SubscriptionMessage = {
 };
 
 export const STORAGE_KEY = "YSO-KEY";
+export const SUB_ORDER_KEY = "YSO-SUBSCRIPTION-ORDER";
 export const CHANNEL_TAG = "ytd-guide-entry-renderer";
 export const EXPAND_CLASS = "click-2-expand";
 export const FOLDER_CLASS = "yt-organizer-folder";

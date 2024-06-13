@@ -4,14 +4,8 @@ import {
   STORAGE_KEY,
   EXPAND_CLASS,
   ATTR_NAME,
-  NUM_CHANNEL,
 } from "./constants";
-import {
-  sortSubscriptions,
-  storeFolderLocal,
-  resetStorage,
-  currStored,
-} from "./utils";
+import { sortSubscriptions, resetStorage, currStored } from "./utils";
 
 const active = document.createAttribute("active");
 
@@ -26,7 +20,7 @@ export function handleDelete(this: HTMLDivElement, e: MouseEvent) {
   folder.remove();
   const storedData = currStored();
   delete storedData[folder.title];
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(currStored));
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(storedData));
 }
 
 export function handleEdit(this: HTMLDivElement, e: MouseEvent) {
@@ -87,14 +81,7 @@ export function handleSave(this: HTMLDivElement, e: MouseEvent) {
   const allFolders = subscriptionTab.querySelectorAll(`.${FOLDER_CLASS}`);
   sortSubscriptions(subscriptionTab, allFolders);
 
-  resetStorage();
-  for (const f of allFolders) {
-    const fLabel = f.children[1] as HTMLDivElement;
-    const fTitle = fLabel.textContent;
-    const fChannels = f.querySelectorAll(CHANNEL_TAG);
-    (f as HTMLElement).style.setProperty(NUM_CHANNEL, `${fChannels.length}`);
-    storeFolderLocal(fChannels, fTitle);
-  }
+  resetStorage(allFolders);
 
   labelDiv.removeAttribute("contentEditable");
   labelDiv.removeAttribute("data-title");
