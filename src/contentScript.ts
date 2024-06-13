@@ -1,4 +1,4 @@
-import { FOLDER_CLASS, type SubscriptionMessage } from "./constants";
+import { FOLDER_CLASS, type FlaggedMessage } from "./constants";
 import { createNewFolderButton, initializeStoredFolders } from "./components";
 import {
   prependNewSubscription,
@@ -55,14 +55,14 @@ const main = () => {
   s.src = chrome.runtime.getURL("src/injected/index.js");
   chrome.runtime.onMessage.addListener(
     (
-      obj: SubscriptionMessage,
+      obj: FlaggedMessage,
       _sender: chrome.runtime.MessageSender,
-      _response: (response?: any) => void
+      response: (response?: any) => void
     ): void => {
-      const { type, navBarLoaded } = obj;
+      const { type, flag } = obj;
       switch (type) {
         case "initialize":
-          initializeNavBar(navBarLoaded).then((expander) => {
+          initializeNavBar(flag).then((expander) => {
             // expand subscription section
             const subscriptionList = expander.closest("#items");
             subscriptionList.classList.add("yso-subscription-list");
@@ -86,10 +86,9 @@ const main = () => {
           });
           break;
         case "update":
-          console.log("flag", navBarLoaded);
           const subList = document.querySelector(".yso-subscription-list");
           let allFolders: NodeListOf<Element>;
-          if (navBarLoaded) {
+          if (flag) {
             // update the original order array
             updateSubscriptionOrder(subList);
             // re-sort alphabetically
@@ -110,6 +109,10 @@ const main = () => {
           if (allFolders.length > 0) {
             allFolders[allFolders.length - 1].after(newSub);
           }
+          break;
+        case "check":
+          const initialized = document.querySelector(".yso-subscription-list");
+          response(!!initialized);
       }
     }
   );

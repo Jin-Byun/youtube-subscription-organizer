@@ -1,9 +1,9 @@
 export type FolderData = {
   [key: string]: string[];
 };
-export type SubscriptionMessage = {
+export type FlaggedMessage = {
   type: string;
-  navBarLoaded: boolean;
+  flag: boolean;
 };
 
 export const STORAGE_KEY = "YSO-KEY";

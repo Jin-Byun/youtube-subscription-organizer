@@ -1,8 +1,8 @@
 import reloadOnUpdate from "virtual:reload-on-update-in-background-script";
-import type { SubscriptionMessage } from "./constants";
+import type { FlaggedMessage } from "./constants";
 
 const MinWindowWidth = 1312;
-let isInitialized = false;
+const YOUTUBE_ORIGIN = "https://www.youtube.com";
 
 const getCurrentTab = async (): Promise<number> => {
   const query = { active: true, lastFocusedWindow: true };
@@ -13,7 +13,7 @@ reloadOnUpdate("src/background");
 
 // adding redirection to youtube onclick of the extension icon
 chrome.action.onClicked.addListener((tab) => {
-  chrome.tabs.update(tab.id, { url: "https://www.youtube.com" });
+  chrome.tabs.update(tab.id, { url: YOUTUBE_ORIGIN });
 });
 
 chrome.runtime.onInstalled.addListener(async () => {
@@ -33,21 +33,21 @@ chrome.tabs.onUpdated.addListener(
     tabInfo: chrome.tabs.TabChangeInfo,
     tab: chrome.tabs.Tab
   ) => {
-    if (!tab.url?.includes("https://www.youtube.com/")) {
-      isInitialized = false;
+    if (!tab.url?.includes(YOUTUBE_ORIGIN) || tabInfo.status !== "complete") {
       return;
     }
-    if (isInitialized || tabInfo.status !== "complete") {
-      if (!tabInfo.url && tabInfo.status) {
-        isInitialized = false;
+    const check = await chrome.tabs.sendMessage<FlaggedMessage, boolean>(
+      tabId,
+      {
+        type: "check",
+        flag: true,
       }
-      return;
-    }
-    isInitialized = true;
+    );
+    if (check) return;
     chrome.tabs
-      .sendMessage<SubscriptionMessage>(tabId, {
+      .sendMessage<FlaggedMessage>(tabId, {
         type: "initialize",
-        navBarLoaded: tab.width > MinWindowWidth,
+        flag: tab.width > MinWindowWidth,
       })
       .catch((e) => console.log(e));
   }
@@ -59,9 +59,9 @@ chrome.webRequest.onCompleted.addListener(
     getCurrentTab().then((id) => {
       const flag = details.url.includes("unsubscribe");
       chrome.tabs
-        .sendMessage<SubscriptionMessage>(id, {
+        .sendMessage<FlaggedMessage>(id, {
           type: "update",
-          navBarLoaded: flag,
+          flag,
         })
         .catch((e) => console.error(e));
     });
