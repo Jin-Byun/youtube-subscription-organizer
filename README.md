@@ -20,7 +20,8 @@ I have few hobbies/interests. They include programming(Go, Rust, JS/TS, Elixir, 
 - [x] Make edit function
 - [x] Prevent empty directory
 - [x] Respond to subscription change (subscribe, unsubscribe)
-- [ ] Check the user Id to make sure that the directory is created per id
+- [x] Check the user Id to make sure that the directory is created per id
+- [ ] Make extension popup for function toggles and proper logo
 - [ ] More
 
 ## How to use it
