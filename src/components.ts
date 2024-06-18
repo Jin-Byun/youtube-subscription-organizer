@@ -63,8 +63,8 @@ const SaveButton = (subList: Element): HTMLButtonElement => {
       return;
     }
     if (
-      getAllStoredFolders() &&
-      Object.keys(getAllStoredFolders()).includes(title)
+      getUserStoredFolders() &&
+      Object.keys(getUserStoredFolders()).includes(title)
     ) {
       labelDiv.setAttribute(PLACEHOLDER_ATTR, LABEL_DUPLICATE);
       setTimeout(() => {

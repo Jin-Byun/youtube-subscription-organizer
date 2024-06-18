@@ -7,14 +7,18 @@ import {
 } from "./constants";
 
 export function storeFolderLocal(selected: NodeListOf<Element>, title: string) {
-  const storedFolders = getAllStoredFolders() ?? {};
+  const storedFolders = getUserStoredFolders() ?? {};
   const newFolder = [];
   for (const ch of selected) {
     const anchor = ch.firstElementChild as HTMLAnchorElement;
     newFolder.push(anchor.getAttribute("href"));
   }
-  storedFolders[getCurrId()][title] = newFolder;
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(storedFolders));
+  storedFolders[title] = newFolder;
+
+  localStorage.setItem(
+    STORAGE_KEY,
+    JSON.stringify({ ...getAllStoredFolders, [getCurrId()]: storedFolders })
+  );
 }
 
 export function resetStorage(folders: NodeListOf<Element> | null = null) {
@@ -61,9 +65,8 @@ export function sortSubscriptions(
 }
 
 export function updateSubscriptionOrder(list: Element) {
-  const order: { [id: string]: string[] } = JSON.parse(
-    localStorage.getItem(SUB_ORDER_KEY)
-  );
+  const order: { [id: string]: string[] } =
+    JSON.parse(localStorage.getItem(SUB_ORDER_KEY)) ?? {};
   const subscriptions = list.children;
   const hrefArr: string[] = [];
   for (const el of subscriptions) {
