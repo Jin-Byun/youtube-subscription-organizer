@@ -5,7 +5,13 @@ import {
   EXPAND_CLASS,
   ATTR_NAME,
 } from "./constants";
-import { sortSubscriptions, resetStorage, currStored } from "./utils";
+import {
+  sortSubscriptions,
+  resetStorage,
+  getAllStoredFolders,
+  getUserStoredFolders,
+  getCurrId,
+} from "./utils";
 
 const active = document.createAttribute("active");
 
@@ -18,8 +24,8 @@ export function handleDelete(this: HTMLDivElement, e: MouseEvent) {
   const folders = subscriptionTab.querySelectorAll(`.${FOLDER_CLASS}`);
   sortSubscriptions(subscriptionTab, folders);
   folder.remove();
-  const storedData = currStored();
-  delete storedData[folder.title];
+  const storedData = getAllStoredFolders();
+  delete storedData[getCurrId()][folder.title];
   localStorage.setItem(STORAGE_KEY, JSON.stringify(storedData));
 }
 
@@ -44,31 +50,10 @@ export function handleSave(this: HTMLDivElement, e: MouseEvent) {
   e.preventDefault();
   const folder = this.parentElement;
   const labelDiv = folder.children[1] as HTMLDivElement;
-  const currTitle = labelDiv.textContent;
-  const prevTitle = labelDiv.getAttribute("data-title");
-  if (currTitle === "") {
-    const tmp = this.textContent;
-    this.textContent = "no name";
-    setTimeout(() => {
-      this.textContent = tmp;
-    }, 1500);
-    return;
-  }
-  if (
-    Object.keys(currStored()).includes(currTitle) &&
-    currTitle !== prevTitle
-  ) {
-    const tmp = this.textContent;
-    this.textContent = "duplicate";
-    setTimeout(() => {
-      this.textContent = tmp;
-    }, 1500);
-    return;
-  }
-  folder.classList.remove("edit");
-  folder
-    .querySelectorAll(".YSO-edit-menu")
-    .forEach((v) => v.classList.remove("edit"));
+
+  if (!isSaveValid(labelDiv)) return;
+  removeEditClass(folder);
+
   const channels = folder.querySelectorAll(CHANNEL_TAG);
 
   const subscriptionTab = folder.parentElement;
@@ -89,13 +74,35 @@ export function handleSave(this: HTMLDivElement, e: MouseEvent) {
   deactivateToggleChannel(subscriptionTab.querySelectorAll(CHANNEL_TAG));
 }
 
+function isSaveValid(labelDiv: HTMLDivElement): boolean {
+  const currTitle = labelDiv.textContent;
+  const prevTitle = labelDiv.getAttribute("data-title");
+  if (currTitle === "") {
+    const tmp = this.textContent;
+    this.textContent = "no name";
+    setTimeout(() => {
+      this.textContent = tmp;
+    }, 1500);
+    return false;
+  }
+  if (
+    Object.keys(getUserStoredFolders()).includes(currTitle) &&
+    currTitle !== prevTitle
+  ) {
+    const tmp = this.textContent;
+    this.textContent = "duplicate";
+    setTimeout(() => {
+      this.textContent = tmp;
+    }, 1500);
+    return false;
+  }
+  return true;
+}
+
 export function handleCancel(this: HTMLDivElement, e: MouseEvent) {
   e.preventDefault();
   const folder = this.parentElement;
-  folder.classList.remove("edit");
-  folder
-    .querySelectorAll(".YSO-edit-menu")
-    .forEach((v) => v.classList.remove("edit"));
+  removeEditClass(folder);
 
   const labelDiv = folder.children[1] as HTMLDivElement;
   labelDiv.textContent = labelDiv.getAttribute("data-title");
@@ -104,6 +111,13 @@ export function handleCancel(this: HTMLDivElement, e: MouseEvent) {
 
   const subscriptionTab = folder.parentElement;
   deactivateToggleChannel(subscriptionTab.querySelectorAll(CHANNEL_TAG));
+}
+
+function removeEditClass(folder: HTMLElement): void {
+  folder.classList.remove("edit");
+  folder
+    .querySelectorAll(".YSO-edit-menu")
+    .forEach((v) => v.classList.remove("edit"));
 }
 
 // create and append a floating context menu with option for delete and edit

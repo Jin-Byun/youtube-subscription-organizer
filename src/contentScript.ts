@@ -14,27 +14,22 @@ refreshOnUpdate("src/content");
 const SubscriptionExpander =
   "ytd-guide-collapsible-entry-renderer.ytd-guide-section-renderer";
 
-const initializeNavBar = (isLoaded: Boolean): Promise<HTMLElement> => {
-  if (isLoaded) return waitForElementLoad(SubscriptionExpander);
-
-  let navBarTrigger: HTMLElement;
-
-  return new Promise((res) => {
-    waitForElementLoad("#guide").then((navBar) => {
-      navBar.style.display = "none"; // hide action being done
-      navBarTrigger = document
-        .getElementById("guide-button")
-        .querySelector("yt-interaction");
-      navBarTrigger.click();
-    });
-    waitForElementLoad("#sections").then(() => {
-      // close the side bar and re-display it
-      navBarTrigger.click();
-      document.getElementById("guide").style.removeProperty("display");
-      res(waitForElementLoad(SubscriptionExpander));
-    });
-  });
-};
+const initializeNavBar = (isLoaded: Boolean): Promise<HTMLElement> =>
+  isLoaded
+    ? waitForElementLoad(SubscriptionExpander)
+    : new Promise((res) => {
+        waitForElementLoad("#guide").then((navBar) => {
+          const attr = document.createAttribute("opened");
+          navBar.style.display = "none"; // hide action being done
+          navBar.setAttributeNode(attr);
+          waitForElementLoad("#sections").then(() => {
+            // close the side bar and re-display it
+            navBar.removeAttribute("opened");
+            navBar.style.removeProperty("display");
+            res(waitForElementLoad(SubscriptionExpander));
+          });
+        });
+      });
 const expandSubscription = (expander: Element, list: Element) => {
   const trigger: HTMLElement = expander.querySelector("yt-interaction");
   trigger.click();
@@ -44,8 +39,7 @@ const expandSubscription = (expander: Element, list: Element) => {
   updateSubscriptionOrder(list);
   sortSubscriptions(list);
 };
-
-const main = () => {
+const injectScript = () => {
   const s = document.createElement("script");
   (document.head || document.documentElement).appendChild(s);
   s.onload = function () {
@@ -53,41 +47,53 @@ const main = () => {
     t.remove();
   };
   s.src = chrome.runtime.getURL("src/injected/index.js");
+};
+const initUserInfo = async () => {
+  const userInfo: HTMLElement = document.querySelector("ytd-popup-container");
+  userInfo.style.display = "none";
+  const avatarButton = document.getElementById("avatar-btn");
+  avatarButton.click();
+  await waitForElementLoad("#channel-handle");
+  avatarButton.click();
+  userInfo.style.removeProperty("display");
+};
+
+const main = () => {
   chrome.runtime.onMessage.addListener(
-    (
-      obj: FlaggedMessage,
+    async (
+      { type, flag }: FlaggedMessage,
       _sender: chrome.runtime.MessageSender,
       response: (response?: any) => void
-    ): void => {
-      const { type, flag } = obj;
+    ): Promise<void> => {
+      injectScript();
       switch (type) {
         case "initialize":
-          initializeNavBar(flag).then((expander) => {
-            // expand subscription section
-            const subscriptionList = expander.closest("#items");
-            subscriptionList.classList.add("yso-subscription-list");
-            expandSubscription(expander, subscriptionList);
-            initializeStoredFolders(subscriptionList);
-            const subscriptionTabLabel =
-              subscriptionList.previousElementSibling as HTMLElement;
-            const header =
-              subscriptionTabLabel.firstElementChild as HTMLElement;
-            header.style.cursor = "pointer";
-            header.addEventListener("click", () => {
-              document
-                .querySelector(`a[href="/feed/subscriptions"]`)
-                .parentElement.click();
-            });
-            subscriptionTabLabel.style.display = "flex";
-            subscriptionTabLabel.style.alignItems = "center";
-            subscriptionTabLabel.append(
-              createNewFolderButton(subscriptionList)
-            );
+          const expander = await initializeNavBar(flag);
+          await initUserInfo();
+          // expand subscription section
+          const subscriptionList = expander.closest("#items");
+          subscriptionList.classList.add("yso-subscription-list");
+          expandSubscription(expander, subscriptionList);
+          initializeStoredFolders(subscriptionList);
+          const subscriptionTabLabel =
+            subscriptionList.previousElementSibling as HTMLElement;
+          const header = subscriptionTabLabel.firstElementChild as HTMLElement;
+          header.style.cursor = "pointer";
+          header.addEventListener("click", () => {
+            document
+              .querySelector(`a[href="/feed/subscriptions"]`)
+              .parentElement.click();
           });
+          subscriptionTabLabel.style.display = "flex";
+          subscriptionTabLabel.style.alignItems = "center";
+          subscriptionTabLabel.append(createNewFolderButton(subscriptionList));
           break;
         case "update":
           const subList = document.querySelector(".yso-subscription-list");
           let allFolders: NodeListOf<Element>;
+          const uid = document
+            .getElementById("channel-handle")
+            .getAttribute("title");
           if (flag) {
             // update the original order array
             updateSubscriptionOrder(subList);

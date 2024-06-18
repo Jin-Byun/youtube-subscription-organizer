@@ -7,12 +7,13 @@ import {
 } from "./constants";
 
 export function storeFolderLocal(selected: NodeListOf<Element>, title: string) {
-  const storedFolders = currStored() ?? {};
-  storedFolders[title] = [];
+  const storedFolders = getAllStoredFolders() ?? {};
+  const newFolder = [];
   for (const ch of selected) {
     const anchor = ch.firstElementChild as HTMLAnchorElement;
-    storedFolders[title].push(anchor.getAttribute("href"));
+    newFolder.push(anchor.getAttribute("href"));
   }
+  storedFolders[getCurrId()][title] = newFolder;
   localStorage.setItem(STORAGE_KEY, JSON.stringify(storedFolders));
 }
 
@@ -28,8 +29,13 @@ export function resetStorage(folders: NodeListOf<Element> | null = null) {
   }
 }
 
-export function currStored(): FolderData {
+export function getAllStoredFolders(): FolderData {
   return JSON.parse(localStorage.getItem(STORAGE_KEY));
+}
+
+export function getUserStoredFolders(): { [folderName: string]: string[] } {
+  const allFolders = getAllStoredFolders();
+  return allFolders?.[getCurrId()];
 }
 
 export function sortSubscriptions(
@@ -55,6 +61,9 @@ export function sortSubscriptions(
 }
 
 export function updateSubscriptionOrder(list: Element) {
+  const order: { [id: string]: string[] } = JSON.parse(
+    localStorage.getItem(SUB_ORDER_KEY)
+  );
   const subscriptions = list.children;
   const hrefArr: string[] = [];
   for (const el of subscriptions) {
@@ -62,13 +71,16 @@ export function updateSubscriptionOrder(list: Element) {
     if (!a?.getAttribute("href")) continue;
     hrefArr.push(a.getAttribute("href"));
   }
-  localStorage.setItem(SUB_ORDER_KEY, JSON.stringify(hrefArr));
+  order[getCurrId()] = hrefArr;
+  localStorage.setItem(SUB_ORDER_KEY, JSON.stringify(order));
 }
 
 export function prependNewSubscription(node: Element) {
-  const order: string[] = JSON.parse(localStorage.getItem(SUB_ORDER_KEY));
+  const order: { [id: string]: string[] } = JSON.parse(
+    localStorage.getItem(SUB_ORDER_KEY)
+  );
   const a = node.firstElementChild as HTMLAnchorElement;
-  order.unshift(a.getAttribute("href"));
+  order[getCurrId()].unshift(a.getAttribute("href"));
   localStorage.setItem(SUB_ORDER_KEY, JSON.stringify(order));
 }
 
@@ -90,4 +102,8 @@ export function waitForElementLoad(selector: string): Promise<HTMLElement> {
       subtree: true,
     });
   });
+}
+
+export function getCurrId(): string {
+  return document.getElementById("channel-handle").getAttribute("title");
 }

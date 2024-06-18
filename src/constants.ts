@@ -1,5 +1,5 @@
 export type FolderData = {
-  [key: string]: string[];
+  [userId: string]: { [folderName: string]: string[] };
 };
 export type FlaggedMessage = {
   type: string;

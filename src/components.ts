@@ -22,7 +22,12 @@ import {
   toggleCollapsible,
   toggleOption,
 } from "./handlers";
-import { storeFolderLocal, currStored, resetStorage } from "./utils";
+import {
+  storeFolderLocal,
+  getAllStoredFolders,
+  resetStorage,
+  getUserStoredFolders,
+} from "./utils";
 
 const subscriptionFolder = (title: string): HTMLDivElement => {
   const label = `<div class="${EXPAND_CLASS}">${title}</div>`;
@@ -57,7 +62,10 @@ const SaveButton = (subList: Element): HTMLButtonElement => {
       }, 1500);
       return;
     }
-    if (currStored() && Object.keys(currStored()).includes(title)) {
+    if (
+      getAllStoredFolders() &&
+      Object.keys(getAllStoredFolders()).includes(title)
+    ) {
       labelDiv.setAttribute(PLACEHOLDER_ATTR, LABEL_DUPLICATE);
       setTimeout(() => {
         labelDiv.setAttribute(PLACEHOLDER_ATTR, "");
@@ -137,9 +145,8 @@ export function createNewFolderButton(list: Element): HTMLButtonElement {
   return button;
 }
 export function initializeStoredFolders(list: Element) {
-  const check = localStorage.getItem(STORAGE_KEY);
-  if (!check || check === "undefined") return resetStorage();
-  const folders: FolderData = JSON.parse(check);
+  const folders = getUserStoredFolders();
+  if (!folders) return resetStorage();
   for (const [title, channels] of Object.entries(folders)) {
     const folder = subscriptionFolder(title);
     folder.style.setProperty(NUM_CHANNEL, `${channels.length}`);
