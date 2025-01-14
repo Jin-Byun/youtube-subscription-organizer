@@ -8,9 +8,14 @@
   padding-inline: 4px;
   border-radius: 4px;
   cursor: pointer;
+  color: var(--yt-spec-text-primary);
+  @media (prefers-color-scheme: dark) {
+    background: rgba(255, 255, 255, 0.1);
+  }
 }
 
 .yt-organizer-folder {
+  color: var(--yt-spec-text-primary);
   width: 100%;
   height: fit-content;
   display: flex;
@@ -23,9 +28,15 @@
   transition-duration: clamp(200ms, calc(var(--number-of-ch) * 60ms), 500ms);
   transition-timing-function: ease-in-out;
   cursor: pointer;
+  @media (prefers-color-scheme: dark) {
+    font-weight: lighter;
+  }
   > img {
     width: 30px;
     margin-left: 10px;
+    @media (prefers-color-scheme: dark) {
+      filter: invert(1);
+    }
   }
   > div.click-2-expand {
     width: 50%;
@@ -49,24 +60,35 @@
     }
   }
   > ytd-guide-entry-renderer {
-    border-left: solid 1px rgba(0, 0, 0, 0.5);
+    border-left: solid 1px var(--yt-spec-outline);
     border-top-left-radius: 0;
     border-bottom-left-radius: 0;
   }
 
   &.new {
+    align-items: center;
+    height: 32px;
     > button {
       height: 30px;
       padding: 5px 8px;
       margin-right: 10px;
       cursor: pointer;
+      color: var(--yt-spec-text-primary);
+      @media (prefers-color-scheme: dark) {
+        background: rgba(255, 255, 255, 0.1);
+      }
     }
     > div {
-      width: 140px;
-      padding-left: 10px;
-      font-size: 1.4rem;
-      line-height: 3.2rem;
-      overflow-x: hidden;
+      outline: 1px solid var(--yt-spec-outline);
+      width: 130px;
+      height: 28px;
+      padding-inline: 5px;
+      margin-left: 10px;
+      font-size: 1.3rem;
+      line-height: 2.6rem;
+      display: flex;
+      align-items: center;
+      overflow: clip;
       white-space: nowrap;
       cursor: text;
       &[data-placeholder="Right click adds channel"] {
@@ -76,9 +98,13 @@
       &[data-placeholder="Name in use"] {
         background-color: rgb(200, 0, 0, 0.2);
       }
-      &:not(:focus):before {
+      &[data-placeholder]:not(:focus):before {
         content: attr(data-placeholder);
         font-size: 1.2rem;
+        pointer-events: none;
+      }
+      :is(br) {
+        display: none;
       }
     }
   }

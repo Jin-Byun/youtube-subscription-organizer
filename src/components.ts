@@ -134,7 +134,7 @@ export function createNewFolderButton(list: Element): HTMLButtonElement {
     labelDiv.contentEditable = "true";
     labelDiv.setAttribute(PLACEHOLDER_ATTR, LABEL_PLACEHOLDER);
     function removePlaceholder() {
-      this.setAttribute(PLACEHOLDER_ATTR, "");
+      this.removeAttribute(PLACEHOLDER_ATTR);
       this.removeEventListener(removePlaceholder);
     }
     labelDiv.addEventListener("focus", removePlaceholder);
