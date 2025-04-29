@@ -7,9 +7,6 @@ import {
   updateSubscriptionOrder,
   waitForElementLoad,
 } from "./utils";
-import refreshOnUpdate from "virtual:reload-on-update-in-view";
-
-refreshOnUpdate("src/content");
 
 const SubscriptionExpander =
   "ytd-guide-collapsible-entry-renderer.ytd-guide-section-renderer";

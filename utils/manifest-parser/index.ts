@@ -5,16 +5,14 @@ class ManifestParser {
   private constructor() {}
 
   static convertManifestToString(manifest: Manifest): string {
-    if (process.env.__FIREFOX__) {
-      manifest = this.convertToFirefoxCompatibleManifest(manifest);
+    if (!process.env.__FIREFOX__) {
+      return JSON.stringify(manifest, null, 2);
     }
-    return JSON.stringify(manifest, null, 2);
+    return JSON.stringify(ManifestParser.convertToFirefoxCompatibleManifest(manifest), null, 2);
   }
 
   static convertToFirefoxCompatibleManifest(manifest: Manifest) {
-    const manifestCopy = {
-      ...manifest,
-    } as { [key: string]: unknown };
+    const {options_page, ...manifestCopy } = manifest as Record<string, unknown>;
 
     manifestCopy.background = {
       scripts: [manifest.background?.service_worker],
@@ -27,7 +25,6 @@ class ManifestParser {
     manifestCopy.content_security_policy = {
       extension_pages: "script-src 'self'; object-src 'self'",
     };
-    delete manifestCopy.options_page;
     return manifestCopy as Manifest;
   }
 }
