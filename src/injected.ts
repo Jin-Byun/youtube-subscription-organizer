@@ -1,4 +1,4 @@
-(function () {
+(() => {
   const { fetch: FETCH } = window;
   window.fetch = async (...args) => {
     const SUB_URL = "https://www.youtube.com/youtubei/v1/subscription/";
@@ -9,10 +9,10 @@
     if (req.url.includes(UNSUB)) {
       // unravel existing folder
       const folders = document.querySelectorAll(".yt-organizer-folder");
-      folders.forEach((f) => {
+      for (const f of folders) {
         f.after(...f.querySelectorAll("ytd-guide-entry-renderer"));
         f.remove();
-      });
+      }
 
       // re-organize to original youtube ordering
       const orderData = localStorage.getItem("YSO-SUBSCRIPTION-ORDER");

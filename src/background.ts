@@ -1,31 +1,21 @@
-import reloadOnUpdate from "virtual:reload-on-update-in-background-script";
-import type { FlaggedMessage } from "./constants";
-
-const MinWindowWidth = 1312;
-const YOUTUBE_ORIGIN = "https://www.youtube.com";
+import { type FlaggedMessage, WIDTH_LG, YOUTUBE_ORIGIN } from "./constants";
 
 const getCurrentTab = async (): Promise<number> => {
   const query = { active: true, lastFocusedWindow: true };
   const [tab] = await chrome.tabs.query(query);
   return tab.id;
 };
-reloadOnUpdate("src/background");
 
 // adding redirection to youtube onclick of the extension icon
 chrome.action.onClicked.addListener((tab) => {
   chrome.tabs.update(tab.id, { url: YOUTUBE_ORIGIN });
 });
 
-chrome.runtime.onInstalled.addListener(async () => {
-  for (const cs of chrome.runtime.getManifest().content_scripts) {
-    for (const tab of await chrome.tabs.query({ url: cs.matches })) {
-      chrome.scripting.executeScript({
-        target: { tabId: tab.id },
-        files: cs.js,
-      });
-    }
-  }
-});
+chrome.commands.onCommand.addListener((shortcut) => {
+  if (shortcut !== 'reload') return;
+  console.log("Reloading extension!");
+  chrome.runtime.reload();
+})
 
 chrome.tabs.onUpdated.addListener(
   async (
@@ -47,7 +37,7 @@ chrome.tabs.onUpdated.addListener(
     chrome.tabs
       .sendMessage<FlaggedMessage>(tabId, {
         type: "initialize",
-        flag: tab.width > MinWindowWidth,
+        flag: tab.width > WIDTH_LG,
       })
       .catch((e) => console.log(e));
   }

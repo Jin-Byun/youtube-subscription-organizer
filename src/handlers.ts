@@ -33,9 +33,9 @@ export function handleEdit(this: HTMLDivElement, e: MouseEvent) {
   e.preventDefault();
   const folder = this.parentElement;
   folder.classList.add("edit");
-  folder
-    .querySelectorAll(".YSO-edit-menu")
-    .forEach((v) => v.classList.add("edit"));
+  for (const f of folder.querySelectorAll(".YSO-edit-menu")) {
+    f.classList.add("edit");
+  }
   activateToggleChannel(folder.querySelectorAll(CHANNEL_TAG), true);
 
   const labelDiv = folder.children[1] as HTMLDivElement;
@@ -115,9 +115,9 @@ export function handleCancel(this: HTMLDivElement, e: MouseEvent) {
 
 function removeEditClass(folder: HTMLElement): void {
   folder.classList.remove("edit");
-  folder
-    .querySelectorAll(".YSO-edit-menu")
-    .forEach((v) => v.classList.remove("edit"));
+  for (const f of folder.querySelectorAll(".YSO-edit-menu")) {
+    f.classList.remove("edit");
+  }
 }
 
 // create and append a floating context menu with option for delete and edit
@@ -159,7 +159,7 @@ export function deactivateToggleChannel(
 }
 export function activateToggleChannel(
   list: HTMLCollection | NodeListOf<Element>,
-  isActive: boolean = false
+  isActive = false
 ) {
   for (const ch of list) {
     if (ch.hasAttribute(ATTR_NAME)) continue;

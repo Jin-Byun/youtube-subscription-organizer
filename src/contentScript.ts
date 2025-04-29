@@ -14,7 +14,7 @@ refreshOnUpdate("src/content");
 const SubscriptionExpander =
   "ytd-guide-collapsible-entry-renderer.ytd-guide-section-renderer";
 
-const initializeNavBar = (isLoaded: Boolean): Promise<HTMLElement> =>
+const initializeNavBar = (isLoaded: boolean): Promise<HTMLElement> =>
   isLoaded
     ? waitForElementLoad(SubscriptionExpander)
     : new Promise((res) => {
@@ -32,6 +32,7 @@ const initializeNavBar = (isLoaded: Boolean): Promise<HTMLElement> =>
       });
 const expandSubscription = (expander: Element, list: Element) => {
   const trigger: HTMLElement = expander.querySelector("yt-interaction");
+  if (trigger === null) return;
   trigger.click();
   const expandedItems = expander.querySelector("#expandable-items");
   list.append(...expandedItems.children);
@@ -48,6 +49,7 @@ const injectScript = () => {
   };
   s.src = chrome.runtime.getURL("src/injected/index.js");
 };
+
 const initUserInfo = async () => {
   const userInfo: HTMLElement = document.querySelector("ytd-popup-container");
   userInfo.style.display = "none";
@@ -63,65 +65,65 @@ const main = () => {
     async (
       { type, flag }: FlaggedMessage,
       _sender: chrome.runtime.MessageSender,
-      response: (response?: any) => void
+      response: (response?: boolean) => void
     ): Promise<void> => {
       injectScript();
       switch (type) {
         case "initialize":
-          const expander = await initializeNavBar(flag);
-          await initUserInfo();
-          // expand subscription section
-          const subscriptionList = expander.closest("#items");
-          subscriptionList.classList.add("yso-subscription-list");
-          expandSubscription(expander, subscriptionList);
-          initializeStoredFolders(subscriptionList);
-          const subscriptionTabLabel =
-            subscriptionList.previousElementSibling as HTMLElement;
-          const header = subscriptionTabLabel.firstElementChild as HTMLElement;
-          header.style.cursor = "pointer";
-          header.addEventListener("click", () => {
-            document
-              .querySelector(`a[href="/feed/subscriptions"]`)
-              .parentElement.click();
-          });
-          subscriptionTabLabel.style.display = "flex";
-          subscriptionTabLabel.style.alignItems = "center";
-          subscriptionTabLabel.append(createNewFolderButton(subscriptionList));
+          initUserInfo()
+          .then(() => initializeNavBar(flag))
+          .then((expander: HTMLElement) => {
+            // expand subscription section
+            const subscriptionList = expander.closest("#items");
+            subscriptionList.classList.add("yso-subscription-list");
+            expandSubscription(expander, subscriptionList);
+            initializeStoredFolders(subscriptionList);
+            const subscriptionTabLabel =
+              subscriptionList.previousElementSibling as HTMLElement;
+            const header = subscriptionTabLabel.firstElementChild as HTMLElement;
+            header.style.cursor = "pointer";
+            header.addEventListener("click", () => {
+              document
+                .querySelector(`a[href="/feed/subscriptions"]`)
+                .parentElement.click();
+            });
+            subscriptionTabLabel.style.display = "flex";
+            subscriptionTabLabel.style.alignItems = "center";
+            subscriptionTabLabel.append(createNewFolderButton(subscriptionList));
+          })
           break;
         case "update":
-          const subList = document.querySelector(".yso-subscription-list");
-          let allFolders: NodeListOf<Element>;
-          const uid = document
-            .getElementById("channel-handle")
-            .getAttribute("title");
-          if (flag) {
-            // update the original order array
-            updateSubscriptionOrder(subList);
-            // re-sort alphabetically
-            sortSubscriptions(subList);
-            // setup folders
-            initializeStoredFolders(subList);
-            // update storedData in case of folder content change
-            allFolders = subList.querySelectorAll(`.${FOLDER_CLASS}`);
-            resetStorage(allFolders);
-            return;
-          }
-          // new subscription found on top of folders
-          const newSub = subList.firstElementChild;
-          // update order array
-          prependNewSubscription(newSub);
-          // place new subscription below all folders
-          allFolders = subList.querySelectorAll(`.${FOLDER_CLASS}`);
-          if (allFolders.length > 0) {
-            allFolders[allFolders.length - 1].after(newSub);
-          }
+          handleUpdate(flag);
           break;
         case "check":
-          const initialized = document.querySelector(".yso-subscription-list");
-          response(!!initialized);
+          response(!!document.querySelector(".yso-subscription-list"));
       }
     }
   );
 };
+
+function handleUpdate(flag: boolean) {
+  const subList = document.querySelector(".yso-subscription-list");
+  if (flag) {
+    // update the original order array
+    updateSubscriptionOrder(subList);
+    // re-sort alphabetically
+    sortSubscriptions(subList);
+    // setup folders
+    initializeStoredFolders(subList);
+    // update storedData in case of folder content change
+    resetStorage(subList.querySelectorAll(`.${FOLDER_CLASS}`));
+    return;
+  }
+  // new subscription found on top of folders
+  const newSub = subList.firstElementChild;
+  // update order array
+  prependNewSubscription(newSub);
+  // place new subscription below all folders
+  const allFolders = subList.querySelectorAll(`.${FOLDER_CLASS}`);
+  if (allFolders.length > 0) {
+    allFolders[allFolders.length - 1].after(newSub);
+  }
+}
 
 main();

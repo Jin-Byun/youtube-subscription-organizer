@@ -5,3 +5,5 @@ pnpm-lock.yaml
 utils/reload/*.js
 utils/reload/injections/*.js
 public/manifest.json
+
+*.zip

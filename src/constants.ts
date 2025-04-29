@@ -6,6 +6,9 @@ export type FlaggedMessage = {
   flag: boolean;
 };
 
+export const WIDTH_LG = 1312;
+
+export const YOUTUBE_ORIGIN = "https://www.youtube.com";
 export const STORAGE_KEY = "YSO-KEY";
 export const SUB_ORDER_KEY = "YSO-SUBSCRIPTION-ORDER";
 export const CHANNEL_TAG = "ytd-guide-entry-renderer";

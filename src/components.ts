@@ -1,5 +1,4 @@
 import {
-  STORAGE_KEY,
   EXPAND_CLASS,
   FOLDER_CLASS,
   FOLDER_ICON,
@@ -24,7 +23,6 @@ import {
 } from "./handlers";
 import {
   storeFolderLocal,
-  getAllStoredFolders,
   resetStorage,
   getUserStoredFolders,
 } from "./utils";

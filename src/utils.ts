@@ -2,8 +2,8 @@ import {
   CHANNEL_TAG,
   STORAGE_KEY,
   SUB_ORDER_KEY,
-  FolderData,
   NUM_CHANNEL,
+  type FolderData,
 } from "./constants";
 
 export function storeFolderLocal(selected: NodeListOf<Element>, title: string) {

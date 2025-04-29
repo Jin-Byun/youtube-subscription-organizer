@@ -1,8 +1,7 @@
 import { defineConfig } from "vite";
-import path, { resolve } from "path";
+import path, { resolve } from "node:path";
 import manifest from "./manifest";
 import makeManifest from "./utils/plugins/make-manifest";
-import addHmr from "./utils/plugins/add-hmr";
 import watchRebuild from "./utils/plugins/watch-rebuild";
 
 const rootDir = resolve(__dirname);
@@ -21,7 +20,6 @@ export default defineConfig({
       isDev,
       contentScriptCssKey: regenerateCacheInvalidationKey(),
     }),
-    addHmr({ background: enableHmrInBackgroundScript, view: true }),
     watchRebuild(),
   ],
   publicDir,

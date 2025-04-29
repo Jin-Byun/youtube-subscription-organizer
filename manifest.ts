@@ -8,11 +8,20 @@ const manifest: chrome.runtime.ManifestV3 = {
   name: packageJson.name,
   version: packageJson.version,
   description: packageJson.description,
-  permissions: ["storage", "tabs", "scripting", "activeTab", "webRequest"],
+  permissions: ["commands", "activeTab", "webRequest"], // storage later for storage.sync
   host_permissions: ["https://*/*"],
   background: {
     service_worker: "src/background/index.js",
     type: "module",
+  },
+  commands: {
+    reload: {
+      suggested_key: {
+        default: "Ctrl+Shift+E",
+        mac: "Command+Shift+E",
+      },
+      description: "Reload the extension",
+    },
   },
   action: {
     default_title: "My YT Organizer",
