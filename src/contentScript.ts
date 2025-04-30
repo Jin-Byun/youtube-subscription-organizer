@@ -8,8 +8,6 @@ import {
   waitForElementLoad,
 } from "./utils";
 
-console.log("Here");
-
 const SubscriptionExpander =
   "ytd-guide-collapsible-entry-renderer.ytd-guide-section-renderer";
 
@@ -52,7 +50,7 @@ const injectScript = () => {
 const initUserInfo = async () => {
   const userInfo: HTMLElement = document.querySelector("ytd-popup-container");
   userInfo.style.display = "none";
-  const avatarButton = document.getElementById("avatar-btn");
+  const avatarButton = await waitForElementLoad("#avatar-btn")
   avatarButton.click();
   await waitForElementLoad("#channel-handle");
   avatarButton.click();
@@ -66,18 +64,17 @@ const main = () => {
       _sender: chrome.runtime.MessageSender,
       response: (response?: boolean) => void
     ): Promise<void> => {
-      console.log("here")
       injectScript();
       switch (type) {
         case "initialize":
           initUserInfo()
           .then(() => initializeNavBar(flag))
-          .then((expander: HTMLElement) => {
+          .then(async (expander: HTMLElement) => {
             // expand subscription section
             const subscriptionList = expander.closest("#items");
             subscriptionList.classList.add("yso-subscription-list");
             expandSubscription(expander, subscriptionList);
-            initializeStoredFolders(subscriptionList);
+            await initializeStoredFolders(subscriptionList);
             const subscriptionTabLabel =
               subscriptionList.previousElementSibling as HTMLElement;
             const header = subscriptionTabLabel.firstElementChild as HTMLElement;
@@ -93,7 +90,7 @@ const main = () => {
           })
           break;
         case "update":
-          handleUpdate(flag);
+          await handleUpdate(flag);
           break;
         case "check":
           response(!!document.querySelector(".yso-subscription-list"));
@@ -102,7 +99,7 @@ const main = () => {
   );
 };
 
-function handleUpdate(flag: boolean) {
+async function handleUpdate(flag: boolean) {
   const subList = document.querySelector(".yso-subscription-list");
   if (flag) {
     // update the original order array
@@ -110,9 +107,9 @@ function handleUpdate(flag: boolean) {
     // re-sort alphabetically
     sortSubscriptions(subList);
     // setup folders
-    initializeStoredFolders(subList);
+    await initializeStoredFolders(subList);
     // update storedData in case of folder content change
-    resetStorage(subList.querySelectorAll(`.${FOLDER_CLASS}`));
+    await resetStorage(subList.querySelectorAll(`.${FOLDER_CLASS}`));
     return;
   }
   // new subscription found on top of folders

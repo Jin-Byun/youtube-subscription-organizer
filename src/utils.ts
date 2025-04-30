@@ -6,22 +6,24 @@ import {
   type FolderData,
 } from "./constants";
 
-export function storeFolderLocal(selected: NodeListOf<Element>, title: string) {
-  const storedFolders = getUserStoredFolders() ?? {};
+export async function storeFolderLocal(selected: NodeListOf<Element>, title: string) {
+  const storedFolders = await getUserStoredFolders() ?? {};
   const newFolder = [];
   for (const ch of selected) {
     const anchor = ch.firstElementChild as HTMLAnchorElement;
     newFolder.push(anchor.getAttribute("href"));
   }
   storedFolders[title] = newFolder;
-
-  localStorage.setItem(
-    STORAGE_KEY,
-    JSON.stringify({ ...getAllStoredFolders, [getCurrId()]: storedFolders })
-  );
+  getCurrId()
+  .then((id) => {
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({ ...getAllStoredFolders, [id]: storedFolders })
+    );
+  })
 }
 
-export function resetStorage(folders: NodeListOf<Element> | null = null) {
+export async function resetStorage(folders: NodeListOf<Element> | null = null) {
   localStorage.setItem(STORAGE_KEY, "{}");
   if (folders === null) return;
   for (const f of folders) {
@@ -29,7 +31,7 @@ export function resetStorage(folders: NodeListOf<Element> | null = null) {
     const fTitle = fLabel.textContent;
     const fChannels = f.querySelectorAll(CHANNEL_TAG);
     (f as HTMLElement).style.setProperty(NUM_CHANNEL, `${fChannels.length}`);
-    storeFolderLocal(fChannels, fTitle);
+    await storeFolderLocal(fChannels, fTitle);
   }
 }
 
@@ -37,9 +39,10 @@ export function getAllStoredFolders(): FolderData {
   return JSON.parse(localStorage.getItem(STORAGE_KEY));
 }
 
-export function getUserStoredFolders(): { [folderName: string]: string[] } {
+export async function getUserStoredFolders(): Promise<{ [folderName: string]: string[] }> {
   const allFolders = getAllStoredFolders();
-  return allFolders?.[getCurrId()];
+  const id = await getCurrId();
+  return allFolders?.[id];
 }
 
 export function sortSubscriptions(
@@ -74,8 +77,12 @@ export function updateSubscriptionOrder(list: Element) {
     if (!a?.getAttribute("href")) continue;
     hrefArr.push(a.getAttribute("href"));
   }
-  order[getCurrId()] = hrefArr;
-  localStorage.setItem(SUB_ORDER_KEY, JSON.stringify(order));
+
+  getCurrId()
+  .then((id) => {
+    order[id] = hrefArr;
+    localStorage.setItem(SUB_ORDER_KEY, JSON.stringify(order));
+  })
 }
 
 export function prependNewSubscription(node: Element) {
@@ -83,8 +90,11 @@ export function prependNewSubscription(node: Element) {
     localStorage.getItem(SUB_ORDER_KEY)
   );
   const a = node.firstElementChild as HTMLAnchorElement;
-  order[getCurrId()].unshift(a.getAttribute("href"));
-  localStorage.setItem(SUB_ORDER_KEY, JSON.stringify(order));
+  getCurrId()
+  .then((id) => {
+    order[id].unshift(a.getAttribute("href"));
+    localStorage.setItem(SUB_ORDER_KEY, JSON.stringify(order));
+  })
 }
 
 export function waitForElementLoad(selector: string): Promise<HTMLElement> {
@@ -107,6 +117,20 @@ export function waitForElementLoad(selector: string): Promise<HTMLElement> {
   });
 }
 
-export function getCurrId(): string {
-  return document.getElementById("channel-handle").getAttribute("title");
+export async function getCurrId(): Promise<string> {
+  console.log("here is currid");
+  const key = "sessionUser";
+  const value = document.getElementById("channel-handle").getAttribute("title");
+  return new Promise((res) => {
+    chrome.storage.session.get(key, (result) => {
+      console.log(result);
+      if (result[key] === value) {
+        res(value);
+        return;
+      }
+      chrome.storage.session.set({ [key]: value }, () => {
+        res(value);
+      });
+    });
+  });
 }

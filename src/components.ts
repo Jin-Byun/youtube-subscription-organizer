@@ -49,7 +49,7 @@ const subscriptionFolder = (title: string): HTMLDivElement => {
 const SaveButton = (subList: Element): HTMLButtonElement => {
   const button = document.createElement("button");
   button.innerText = "Save";
-  button.addEventListener("click", (e: MouseEvent) => {
+  button.addEventListener("click", async (e: MouseEvent) => {
     const target = e.target as HTMLElement;
     const labelDiv = target.previousElementSibling as HTMLElement;
     const title = labelDiv.textContent;
@@ -60,10 +60,8 @@ const SaveButton = (subList: Element): HTMLButtonElement => {
       }, 1500);
       return;
     }
-    if (
-      getUserStoredFolders() &&
-      Object.keys(getUserStoredFolders()).includes(title)
-    ) {
+    const folders = await getUserStoredFolders();
+    if (folders && Object.keys(folders).includes(title)) {
       labelDiv.setAttribute(PLACEHOLDER_ATTR, LABEL_DUPLICATE);
       setTimeout(() => {
         labelDiv.setAttribute(PLACEHOLDER_ATTR, "");
@@ -86,7 +84,7 @@ const SaveButton = (subList: Element): HTMLButtonElement => {
     subFolder.append(...selectedSubs);
 
     subList.prepend(subFolder);
-    storeFolderLocal(selectedSubs, title);
+    await storeFolderLocal(selectedSubs, title);
     target.parentElement.remove();
   });
   return button;
@@ -142,9 +140,12 @@ export function createNewFolderButton(list: Element): HTMLButtonElement {
   });
   return button;
 }
-export function initializeStoredFolders(list: Element) {
-  const folders = getUserStoredFolders();
-  if (!folders) return resetStorage();
+export async function initializeStoredFolders(list: Element) {
+  const folders = await getUserStoredFolders();
+  if (!folders) {
+    await resetStorage();
+    return;
+  }
   for (const [title, channels] of Object.entries(folders)) {
     const folder = subscriptionFolder(title);
     folder.style.setProperty(NUM_CHANNEL, `${channels.length}`);

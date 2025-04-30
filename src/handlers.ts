@@ -25,8 +25,11 @@ export function handleDelete(this: HTMLDivElement, e: MouseEvent) {
   sortSubscriptions(subscriptionTab, folders);
   folder.remove();
   const storedData = getAllStoredFolders();
-  delete storedData[getCurrId()][folder.title];
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(storedData));
+  getCurrId()
+  .then((id) => {
+    delete storedData[id][folder.title];
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(storedData));
+  })
 }
 
 export function handleEdit(this: HTMLDivElement, e: MouseEvent) {
@@ -46,12 +49,13 @@ export function handleEdit(this: HTMLDivElement, e: MouseEvent) {
   activateToggleChannel(subscriptionTab.querySelectorAll(CHANNEL_TAG));
 }
 
-export function handleSave(this: HTMLDivElement, e: MouseEvent) {
+export async function handleSave(this: HTMLDivElement, e: MouseEvent) {
   e.preventDefault();
   const folder = this.parentElement;
   const labelDiv = folder.children[1] as HTMLDivElement;
 
-  if (!isSaveValid(labelDiv)) return;
+  const isValid = await isSaveValid(labelDiv);
+  if (!isValid) return;
   removeEditClass(folder);
 
   const channels = folder.querySelectorAll(CHANNEL_TAG);
@@ -66,7 +70,7 @@ export function handleSave(this: HTMLDivElement, e: MouseEvent) {
   const allFolders = subscriptionTab.querySelectorAll(`.${FOLDER_CLASS}`);
   sortSubscriptions(subscriptionTab, allFolders);
 
-  resetStorage(allFolders);
+  await resetStorage(allFolders);
 
   labelDiv.removeAttribute("contentEditable");
   labelDiv.removeAttribute("data-title");
@@ -74,7 +78,7 @@ export function handleSave(this: HTMLDivElement, e: MouseEvent) {
   deactivateToggleChannel(subscriptionTab.querySelectorAll(CHANNEL_TAG));
 }
 
-function isSaveValid(labelDiv: HTMLDivElement): boolean {
+async function isSaveValid(labelDiv: HTMLDivElement): Promise<boolean> {
   const currTitle = labelDiv.textContent;
   const prevTitle = labelDiv.getAttribute("data-title");
   if (currTitle === "") {
@@ -85,8 +89,9 @@ function isSaveValid(labelDiv: HTMLDivElement): boolean {
     }, 1500);
     return false;
   }
+  const storedFolders = await getUserStoredFolders();
   if (
-    Object.keys(getUserStoredFolders()).includes(currTitle) &&
+    Object.keys(storedFolders).includes(currTitle) &&
     currTitle !== prevTitle
   ) {
     const tmp = this.textContent;
