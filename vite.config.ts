@@ -43,7 +43,8 @@ export default defineConfig({
           const { dir, name: _name } = path.parse(assetInfo.name);
           const assetFolder = dir.split("/").at(-1);
           const name = assetFolder + firstUpperCase(_name);
-          if (name === "Styles") {
+          console.log(name, cacheInvalidationKey)
+          if (name === "Contentstyle") {
             return `assets/css/Styles${cacheInvalidationKey}.chunk.css`;
           }
           return `assets/[ext]/${name}.chunk.[ext]`;

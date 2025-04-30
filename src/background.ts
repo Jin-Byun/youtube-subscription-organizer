@@ -11,6 +11,17 @@ chrome.action.onClicked.addListener((tab) => {
   chrome.tabs.update(tab.id, { url: YOUTUBE_ORIGIN });
 });
 
+chrome.runtime.onInstalled.addListener(async () => {
+  for (const cs of chrome.runtime.getManifest().content_scripts) {
+    for (const tab of await chrome.tabs.query({ url: cs.matches })) {
+      chrome.scripting.executeScript({
+        target: { tabId: tab.id },
+        files: cs.js,
+      });
+    }
+  }
+});
+
 chrome.commands.onCommand.addListener((shortcut) => {
   if (shortcut !== 'reload') return;
   console.log("Reloading extension!");
@@ -33,6 +44,7 @@ chrome.tabs.onUpdated.addListener(
         flag: true,
       }
     );
+    console.log(check)
     if (check) return;
     chrome.tabs
       .sendMessage<FlaggedMessage>(tabId, {

@@ -8,6 +8,8 @@ import {
   waitForElementLoad,
 } from "./utils";
 
+console.log("Here");
+
 const SubscriptionExpander =
   "ytd-guide-collapsible-entry-renderer.ytd-guide-section-renderer";
 
@@ -64,6 +66,7 @@ const main = () => {
       _sender: chrome.runtime.MessageSender,
       response: (response?: boolean) => void
     ): Promise<void> => {
+      console.log("here")
       injectScript();
       switch (type) {
         case "initialize":

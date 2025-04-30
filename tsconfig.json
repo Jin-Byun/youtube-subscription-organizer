@@ -20,6 +20,5 @@
     "utils",
     "vite.config.ts",
     "node_modules/@types",
-    "utils/reload/rollup.config.ts"
   ]
 }

@@ -8,7 +8,7 @@ const manifest: chrome.runtime.ManifestV3 = {
   name: packageJson.name,
   version: packageJson.version,
   description: packageJson.description,
-  permissions: ["commands", "activeTab", "webRequest"], // storage later for storage.sync
+  permissions: ["activeTab", "tabs", "scripting", "webRequest"], // storage later for storage.sync
   host_permissions: ["https://*/*"],
   background: {
     service_worker: "src/background/index.js",
@@ -17,8 +17,8 @@ const manifest: chrome.runtime.ManifestV3 = {
   commands: {
     reload: {
       suggested_key: {
-        default: "Ctrl+Shift+E",
-        mac: "Command+Shift+E",
+        default: "Ctrl+E",
+        mac: "Command+E",
       },
       description: "Reload the extension",
     },
