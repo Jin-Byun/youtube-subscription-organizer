@@ -1,4 +1,7 @@
-import { type FlaggedMessage, WIDTH_LG, YOUTUBE_ORIGIN } from "./constants";
+import type { FlaggedMessage } from "./constants";
+
+const WIDTH_LG = 1312;
+const YOUTUBE_ORIGIN = "https://www.youtube.com";
 
 const getCurrentTab = async (): Promise<number> => {
   const query = { active: true, lastFocusedWindow: true };
@@ -22,12 +25,6 @@ chrome.runtime.onInstalled.addListener(async () => {
   }
 });
 
-chrome.commands.onCommand.addListener((shortcut) => {
-  if (shortcut !== 'reload') return;
-  console.log("Reloading extension!");
-  chrome.runtime.reload();
-})
-
 chrome.tabs.onUpdated.addListener(
   async (
     tabId: number,
@@ -44,7 +41,6 @@ chrome.tabs.onUpdated.addListener(
         flag: true,
       }
     );
-    console.log(check)
     if (check) return;
     chrome.tabs
       .sendMessage<FlaggedMessage>(tabId, {
@@ -54,19 +50,29 @@ chrome.tabs.onUpdated.addListener(
       .catch((e) => console.log(e));
   }
 );
+
+chrome.runtime.onMessageExternal.addListener(
+  async (req, sender, sendRes) => {
+    if (sender.origin !== YOUTUBE_ORIGIN) return;
+    const value = await chrome.storage.session.get(req.key);
+    sendRes(value);
+  }
+)
+
 const SUB_URL = "https://www.youtube.com/youtubei/v1/subscription/*";
 
-chrome.webRequest.onCompleted.addListener(
-  (details) => {
-    getCurrentTab().then((id) => {
-      const flag = details.url.includes("unsubscribe");
-      chrome.tabs
-        .sendMessage<FlaggedMessage>(id, {
-          type: "update",
-          flag,
-        })
-        .catch((e) => console.error(e));
-    });
-  },
-  { urls: [SUB_URL] }
-);
+// chrome.webRequest.onCompleted.addListener(
+//   (details) => {
+//     getCurrentTab().then((id) => {
+//       console.log(details.url)
+//       const flag = details.url.includes("unsubscribe");
+//       chrome.tabs
+//         .sendMessage<FlaggedMessage>(id, {
+//           type: "update",
+//           flag,
+//         })
+//         .catch((e) => console.error(e));
+//     });
+//   },
+//   { urls: [SUB_URL] }
+// );
