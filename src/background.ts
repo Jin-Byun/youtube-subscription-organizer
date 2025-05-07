@@ -42,6 +42,10 @@ chrome.tabs.onUpdated.addListener(
       }
     );
     if (check) return;
+    chrome
+    .storage
+    .session
+    .setAccessLevel({ accessLevel: chrome.storage.AccessLevel.TRUSTED_AND_UNTRUSTED_CONTEXTS});
     chrome.tabs
       .sendMessage<FlaggedMessage>(tabId, {
         type: "initialize",
@@ -61,18 +65,17 @@ chrome.runtime.onMessageExternal.addListener(
 
 const SUB_URL = "https://www.youtube.com/youtubei/v1/subscription/*";
 
-// chrome.webRequest.onCompleted.addListener(
-//   (details) => {
-//     getCurrentTab().then((id) => {
-//       console.log(details.url)
-//       const flag = details.url.includes("unsubscribe");
-//       chrome.tabs
-//         .sendMessage<FlaggedMessage>(id, {
-//           type: "update",
-//           flag,
-//         })
-//         .catch((e) => console.error(e));
-//     });
-//   },
-//   { urls: [SUB_URL] }
-// );
+chrome.webRequest.onCompleted.addListener(
+  (details) => {
+    getCurrentTab().then((id) => {
+      const flag = details.url.includes("unsubscribe");
+      chrome.tabs
+        .sendMessage<FlaggedMessage>(id, {
+          type: "update",
+          flag,
+        })
+        .catch((e) => console.error(e));
+    });
+  },
+  { urls: [SUB_URL] }
+);

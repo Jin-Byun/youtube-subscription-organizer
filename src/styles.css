@@ -28,9 +28,6 @@
   transition-duration: clamp(200ms, calc(var(--number-of-ch) * 60ms), 500ms);
   transition-timing-function: ease-in-out;
   cursor: pointer;
-  @media (prefers-color-scheme: dark) {
-    font-weight: lighter;
-  }
   > img {
     width: 30px;
     margin-left: 10px;
@@ -38,19 +35,23 @@
       filter: invert(1);
     }
   }
-  > div.click-2-expand {
-    width: 50%;
-    height: 20px;
-    font-size: 1.4rem;
-    line-height: 2.2rem;
-    padding: 5px 8px;
-    margin-left: 12px;
 
+  > div {
+    font-family: "Roboto", "Arial", sans-serif;
     &[contenteditable="true"] {
       background-color: rgb(0, 0, 0, 0.1);
       cursor: text;
     }
+    &.click-2-expand {
+      width: 50%;
+      height: 20px;
+      font-size: 1.4rem;
+      line-height: 2.2rem;
+      padding: 5px 8px;
+      margin-left: 12px;
+    }
   }
+
   > p {
     font-size: 1.5em;
     line-height: 3rem;
@@ -90,10 +91,6 @@
       align-items: center;
       overflow: clip;
       white-space: nowrap;
-      cursor: text;
-      &[data-placeholder="Right click adds channel"] {
-        background-color: rgb(0, 0, 0, 0.1);
-      }
       &[data-placeholder="Please set title"],
       &[data-placeholder="Name in use"] {
         background-color: rgb(200, 0, 0, 0.2);

@@ -3,7 +3,9 @@ import { createNewFolderButton, initializeStoredFolders } from "./components";
 import {
   prependNewSubscription,
   resetStorage,
+  sleep,
   sortSubscriptions,
+  storeUserId,
   updateSubscriptionOrder,
   waitForElementLoad,
 } from "./utils";
@@ -19,11 +21,11 @@ const initializeNavBar = (isLoaded: boolean): Promise<HTMLElement> =>
           const attr = document.createAttribute("opened");
           navBar.style.display = "none"; // hide action being done
           navBar.setAttributeNode(attr);
-          waitForElementLoad("#sections").then(() => {
+          waitForElementLoad(SubscriptionExpander).then((expander) => {
             // close the side bar and re-display it
             navBar.removeAttribute("opened");
             navBar.style.removeProperty("display");
-            res(waitForElementLoad(SubscriptionExpander));
+            res(expander);
           });
         });
       });
@@ -52,9 +54,11 @@ const initUserInfo = async () => {
   userInfo.style.display = "none";
   const avatarButton = await waitForElementLoad("#avatar-btn")
   avatarButton.click();
-  await waitForElementLoad("#channel-handle");
+  const handle = await waitForElementLoad("#channel-handle");
   avatarButton.click();
   userInfo.style.removeProperty("display");
+  const title = handle.getAttribute("title");
+  await storeUserId(title);
 };
 
 const main = () => {
@@ -64,9 +68,9 @@ const main = () => {
       _sender: chrome.runtime.MessageSender,
       response: (response?: boolean) => void
     ): Promise<void> => {
-      injectScript();
       switch (type) {
         case "initialize":
+          injectScript();
           initUserInfo()
           .then(() => initializeNavBar(flag))
           .then(async (expander: HTMLElement) => {
@@ -113,9 +117,14 @@ async function handleUpdate(flag: boolean) {
     return;
   }
   // new subscription found on top of folders
-  const newSub = subList.firstElementChild;
+  let newSub = subList.firstElementChild;
+  while (newSub.tagName === "DIV") {
+    await sleep(200);
+    newSub = subList.firstElementChild;
+    console.log(newSub.tagName);
+  }
   // update order array
-  prependNewSubscription(newSub);
+  await prependNewSubscription(newSub);
   // place new subscription below all folders
   const allFolders = subList.querySelectorAll(`.${FOLDER_CLASS}`);
   if (allFolders.length > 0) {

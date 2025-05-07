@@ -14,13 +14,11 @@ export async function storeFolderLocal(selected: NodeListOf<Element>, title: str
     newFolder.push(anchor.getAttribute("href"));
   }
   storedFolders[title] = newFolder;
-  getCurrId()
-  .then((id) => {
-    localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify({ ...getAllStoredFolders, [id]: storedFolders })
-    );
-  })
+  const id = await getCurrId();
+  localStorage.setItem(
+    STORAGE_KEY,
+    JSON.stringify({ ...getAllStoredFolders, [id]: storedFolders })
+  );
 }
 
 export async function resetStorage(folders: NodeListOf<Element> | null = null) {
@@ -85,16 +83,14 @@ export function updateSubscriptionOrder(list: Element) {
   })
 }
 
-export function prependNewSubscription(node: Element) {
+export async function prependNewSubscription(node: Element) {
   const order: { [id: string]: string[] } = JSON.parse(
     localStorage.getItem(SUB_ORDER_KEY)
   );
   const a = node.firstElementChild as HTMLAnchorElement;
-  getCurrId()
-  .then((id) => {
-    order[id].unshift(a.getAttribute("href"));
-    localStorage.setItem(SUB_ORDER_KEY, JSON.stringify(order));
-  })
+  const id = await getCurrId();
+  order[id].unshift(a.getAttribute("href"));
+  localStorage.setItem(SUB_ORDER_KEY, JSON.stringify(order));
 }
 
 export function waitForElementLoad(selector: string): Promise<HTMLElement> {
@@ -117,20 +113,18 @@ export function waitForElementLoad(selector: string): Promise<HTMLElement> {
   });
 }
 
-export async function getCurrId(): Promise<string> {
-  console.log("here is currid");
-  const key = "sessionUser";
-  const value = document.getElementById("channel-handle").getAttribute("title");
-  return new Promise((res) => {
-    chrome.storage.session.get(key, (result) => {
-      console.log(result);
-      if (result[key] === value) {
-        res(value);
-        return;
-      }
-      chrome.storage.session.set({ [key]: value }, () => {
-        res(value);
-      });
-    });
-  });
+const SESSIONUSER = "sessionUser";
+
+export async function storeUserId(title: string) {
+  chrome.storage.session.set({ [SESSIONUSER]: title });
 }
+
+export async function getCurrId(): Promise<string> {
+  return new Promise<string>((res) => {
+    chrome.storage.session.get(SESSIONUSER, (result) => {
+      res(result[SESSIONUSER]);
+      })
+    });
+}
+
+export const sleep = (ms: number): Promise<void> => new Promise((res) => setTimeout(res, ms));
