@@ -15,7 +15,7 @@ import {
 
 const active = document.createAttribute("active");
 
-export function handleDelete(this: HTMLDivElement, e: MouseEvent) {
+export async function handleDelete(this: HTMLDivElement, e: MouseEvent) {
   e.preventDefault();
   const folder = this.parentElement;
   const subscriptionTab = folder.parentElement;
@@ -24,12 +24,10 @@ export function handleDelete(this: HTMLDivElement, e: MouseEvent) {
   const folders = subscriptionTab.querySelectorAll(`.${FOLDER_CLASS}`);
   sortSubscriptions(subscriptionTab, folders);
   folder.remove();
-  const storedData = getAllStoredFolders();
-  getCurrId()
-  .then((id) => {
-    delete storedData[id][folder.title];
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(storedData));
-  })
+  const storedData = await getAllStoredFolders();
+  const id = await getCurrId();
+  delete storedData[id][folder.title];
+  await chrome.storage.sync.set({ [STORAGE_KEY]: storedData });
 }
 
 export function handleEdit(this: HTMLDivElement, e: MouseEvent) {

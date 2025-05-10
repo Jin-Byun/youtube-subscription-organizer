@@ -29,14 +29,14 @@ const initializeNavBar = (isLoaded: boolean): Promise<HTMLElement> =>
           });
         });
       });
-const expandSubscription = (expander: Element, list: Element) => {
+const expandSubscription = async (expander: Element, list: Element) => {
   const trigger: HTMLElement = expander.querySelector("yt-interaction");
   if (trigger === null) return;
   trigger.click();
   const expandedItems = expander.querySelector("#expandable-items");
   list.append(...expandedItems.children);
   expander.remove();
-  updateSubscriptionOrder(list);
+  await updateSubscriptionOrder(list);
   sortSubscriptions(list);
 };
 const injectScript = () => {
@@ -77,7 +77,7 @@ const main = () => {
             // expand subscription section
             const subscriptionList = expander.closest("#items");
             subscriptionList.classList.add("yso-subscription-list");
-            expandSubscription(expander, subscriptionList);
+            await expandSubscription(expander, subscriptionList);
             await initializeStoredFolders(subscriptionList);
             const subscriptionTabLabel =
               subscriptionList.previousElementSibling as HTMLElement;
@@ -121,7 +121,6 @@ async function handleUpdate(flag: boolean) {
   while (newSub.tagName === "DIV") {
     await sleep(200);
     newSub = subList.firstElementChild;
-    console.log(newSub.tagName);
   }
   // update order array
   await prependNewSubscription(newSub);

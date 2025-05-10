@@ -2,6 +2,8 @@ import type { FlaggedMessage } from "./constants";
 
 const WIDTH_LG = 1312;
 const YOUTUBE_ORIGIN = "https://www.youtube.com";
+const accessLevel = chrome.storage.AccessLevel.TRUSTED_AND_UNTRUSTED_CONTEXTS;
+const SUB_ORDER_KEY = "YSO-SUBSCRIPTION-ORDER";
 
 const getCurrentTab = async (): Promise<number> => {
   const query = { active: true, lastFocusedWindow: true };
@@ -42,10 +44,7 @@ chrome.tabs.onUpdated.addListener(
       }
     );
     if (check) return;
-    chrome
-    .storage
-    .session
-    .setAccessLevel({ accessLevel: chrome.storage.AccessLevel.TRUSTED_AND_UNTRUSTED_CONTEXTS});
+    chrome.storage.session.setAccessLevel({ accessLevel });
     chrome.tabs
       .sendMessage<FlaggedMessage>(tabId, {
         type: "initialize",
@@ -56,10 +55,12 @@ chrome.tabs.onUpdated.addListener(
 );
 
 chrome.runtime.onMessageExternal.addListener(
-  async (req, sender, sendRes) => {
+  async ({ msg }, sender, res) => {
     if (sender.origin !== YOUTUBE_ORIGIN) return;
-    const value = await chrome.storage.session.get(req.key);
-    sendRes(value);
+    if (msg === "order") {
+      const value = await chrome.storage.session.get(SUB_ORDER_KEY);
+      res(value?.[SUB_ORDER_KEY]);
+    }
   }
 )
 

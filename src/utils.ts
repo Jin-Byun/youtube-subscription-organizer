@@ -15,14 +15,11 @@ export async function storeFolderLocal(selected: NodeListOf<Element>, title: str
   }
   storedFolders[title] = newFolder;
   const id = await getCurrId();
-  localStorage.setItem(
-    STORAGE_KEY,
-    JSON.stringify({ ...getAllStoredFolders, [id]: storedFolders })
-  );
+  await chrome.storage.sync.set({ [STORAGE_KEY]: { ...getAllStoredFolders, [id]: storedFolders } });
 }
 
 export async function resetStorage(folders: NodeListOf<Element> | null = null) {
-  localStorage.setItem(STORAGE_KEY, "{}");
+  await chrome.storage.sync.set({STORAGE_KEY: {}});
   if (folders === null) return;
   for (const f of folders) {
     const fLabel = f.children[1] as HTMLDivElement;
@@ -33,12 +30,13 @@ export async function resetStorage(folders: NodeListOf<Element> | null = null) {
   }
 }
 
-export function getAllStoredFolders(): FolderData {
-  return JSON.parse(localStorage.getItem(STORAGE_KEY));
+export async function getAllStoredFolders(): Promise<FolderData> {
+  const value = await chrome.storage.sync.get(STORAGE_KEY);
+  return value?.[STORAGE_KEY];
 }
 
 export async function getUserStoredFolders(): Promise<{ [folderName: string]: string[] }> {
-  const allFolders = getAllStoredFolders();
+  const allFolders = await getAllStoredFolders();
   const id = await getCurrId();
   return allFolders?.[id];
 }
@@ -65,9 +63,9 @@ export function sortSubscriptions(
   }
 }
 
-export function updateSubscriptionOrder(list: Element) {
-  const order: { [id: string]: string[] } =
-    JSON.parse(localStorage.getItem(SUB_ORDER_KEY)) ?? {};
+export async function updateSubscriptionOrder(list: Element) {
+  const order = await getSubscriptionOrder();
+  if (order) return;
   const subscriptions = list.children;
   const hrefArr: string[] = [];
   for (const el of subscriptions) {
@@ -75,22 +73,19 @@ export function updateSubscriptionOrder(list: Element) {
     if (!a?.getAttribute("href")) continue;
     hrefArr.push(a.getAttribute("href"));
   }
+  chrome.storage.session.set({ [SUB_ORDER_KEY]: hrefArr });
+}
 
-  getCurrId()
-  .then((id) => {
-    order[id] = hrefArr;
-    localStorage.setItem(SUB_ORDER_KEY, JSON.stringify(order));
-  })
+export async function getSubscriptionOrder(): Promise<string[]> {
+  const value = await chrome.storage.session.get(SUB_ORDER_KEY);
+  return value?.[SUB_ORDER_KEY];
 }
 
 export async function prependNewSubscription(node: Element) {
-  const order: { [id: string]: string[] } = JSON.parse(
-    localStorage.getItem(SUB_ORDER_KEY)
-  );
+  const order = await getSubscriptionOrder();
   const a = node.firstElementChild as HTMLAnchorElement;
-  const id = await getCurrId();
-  order[id].unshift(a.getAttribute("href"));
-  localStorage.setItem(SUB_ORDER_KEY, JSON.stringify(order));
+  order.unshift(a.getAttribute("href"));
+  chrome.storage.session.set({ [SUB_ORDER_KEY]: order });
 }
 
 export function waitForElementLoad(selector: string): Promise<HTMLElement> {
@@ -120,11 +115,8 @@ export async function storeUserId(title: string) {
 }
 
 export async function getCurrId(): Promise<string> {
-  return new Promise<string>((res) => {
-    chrome.storage.session.get(SESSIONUSER, (result) => {
-      res(result[SESSIONUSER]);
-      })
-    });
+  const value = await chrome.storage.session.get(SESSIONUSER);
+  return value?.[SESSIONUSER];
 }
 
 export const sleep = (ms: number): Promise<void> => new Promise((res) => setTimeout(res, ms));

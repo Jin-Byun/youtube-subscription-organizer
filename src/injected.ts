@@ -46,33 +46,27 @@ const isUnsubsriptionRequest = (
   input.url.includes("unsubscribe");
 
 const EXT_ID = "emmhlbjleflockmeeeikenjjhajkdcgh";
-const USERKEY = "sessionUser";
 
 (() => {
   const { fetch: FETCH } = window;
   window.fetch = async (...args) => {
     if (!isUnsubsriptionRequest(args[0])) return await FETCH(...args);
     return new Promise<Response>((res) => {
-      chrome.runtime.sendMessage(EXT_ID, {key: USERKEY}, (msg: {[USERKEY]: string}) => {
-        const { sessionUser } = msg;
-        // Check if the navpane has been processed and if not, toggle.
-        checkNavPane(!!document.getElementById("create-new-folder-button"))
-        .then(() => {
-          // unravel existing folder
-          const folders = document.querySelectorAll(".yt-organizer-folder");
-          for (const f of folders) {
-            f.after(...f.querySelectorAll("ytd-guide-entry-renderer"));
-            f.remove();
-          }
+      // Check if the navpane has been processed and if not, toggle.
+      checkNavPane(!!document.getElementById("create-new-folder-button"))
+      .then(() => {
+        // unravel existing folder
+        const folders = document.querySelectorAll(".yt-organizer-folder");
+        for (const f of folders) {
+          f.after(...f.querySelectorAll("ytd-guide-entry-renderer"));
+          f.remove();
+        }
+        chrome.runtime.sendMessage(EXT_ID, {msg: "order"}, (order: string[] | null) => {
           // re-organize to original youtube ordering
-          const orderJSON = localStorage.getItem("YSO-SUBSCRIPTION-ORDER");
-          if (!orderJSON) return res(FETCH(...args));
-          
-          const orderData = JSON.parse(orderJSON)?.[sessionUser];
-          if (!orderData?.length) return res(FETCH(...args));
-
+          if (!order?.length) return res(FETCH(...args));
+  
           const subList = document.querySelector(".yso-subscription-list");
-          const orderedSubs: Array<HTMLElement> = orderData
+          const orderedSubs: Array<HTMLElement> = order
                                                     .map((url: string): HTMLElement =>
                                                       subList
                                                         .querySelector(`a[href="${url}"]`)
