@@ -146,17 +146,23 @@ const filterContent = async (title: string, removeFilter: boolean) => {
   const hrefs = folders[title];
   
   const contentContainer = document.getElementById("contents");
-  const itemTag = "ytd-rich-item-renderer".toUpperCase();
-  const anchorId = "#avatar-link";
-  if (removeFilter) {
-    // removing filter
-    return; 
-  }
   const videoCards = contentContainer.children;
   const contentLength = videoCards.length;
   const firstColumnAttribute = "is-in-first-column";
   const itemsPerRow = Number(videoCards[1].getAttribute("items-per-row"));
   let idx = 0;
+  if (removeFilter) {
+    // removing filter
+    for (let i = 0; i < contentLength - 1; i++) {
+      const card = videoCards[i] as HTMLElement;
+      card.removeAttribute(firstColumnAttribute);
+      card.removeAttribute("style");
+      if (idx % itemsPerRow === 0) card.setAttribute(firstColumnAttribute, "");
+      idx++;
+    }
+    return; 
+  }
+  const anchorId = "#avatar-link";
   for (let i = 0; i < contentLength - 1; i++) {
     const card = videoCards[i] as HTMLElement;
     card.removeAttribute(firstColumnAttribute);
