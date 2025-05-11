@@ -37,6 +37,7 @@ const checkNavPane = (isLoaded: boolean): Promise<void> =>
       });
 
 interface UnsubscribeRequest extends Request {};
+interface GuideRequest extends Request {};
 
 const isUnsubsriptionRequest = (
   input: RequestInfo | URL

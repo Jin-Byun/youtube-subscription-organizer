@@ -138,7 +138,39 @@ export function toggleOption(this: HTMLDivElement, e: MouseEvent) {
     tab.toggleAttribute("activate");
   }
 }
-export function toggleCollapsible(this: HTMLDivElement, e: MouseEvent) {
+
+const filterContent = async (title: string, removeFilter: boolean) => {
+  if (window.location.pathname !== "/feed/subscriptions") return;
+  
+  const folders = await getUserStoredFolders();
+  const hrefs = folders[title];
+  
+  const contentContainer = document.getElementById("contents");
+  const itemTag = "ytd-rich-item-renderer".toUpperCase();
+  const anchorId = "#avatar-link";
+  if (removeFilter) {
+    // removing filter
+    return; 
+  }
+  const videoCards = contentContainer.children;
+  const contentLength = videoCards.length;
+  const firstColumnAttribute = "is-in-first-column";
+  const itemsPerRow = Number(videoCards[1].getAttribute("items-per-row"));
+  let idx = 0;
+  for (let i = 0; i < contentLength - 1; i++) {
+    const card = videoCards[i] as HTMLElement;
+    card.removeAttribute(firstColumnAttribute);
+    const anchor = card.querySelector(anchorId) as HTMLAnchorElement;
+    if (!anchor || !hrefs.includes(new URL(anchor.href).pathname)) {
+      card.style.display = "none";
+      continue;
+    }
+    if (idx % itemsPerRow === 0) card.setAttribute(firstColumnAttribute, "");
+    idx++;
+  }
+};
+
+export async function toggleCollapsible(this: HTMLDivElement, e: MouseEvent) {
   const clickedOn = e.target as HTMLElement;
   if (![EXPAND_CLASS, this.className].includes(clickedOn.className)) {
     // mimic channel highlighting when redirected to specific channel
@@ -149,7 +181,9 @@ export function toggleCollapsible(this: HTMLDivElement, e: MouseEvent) {
     return;
   }
   if (this.classList.contains("edit")) return;
+  
   this.classList.toggle("hide");
+  await filterContent(this.title, this.classList.contains("hide"));
 }
 
 export function deactivateToggleChannel(
