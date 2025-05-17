@@ -8,7 +8,7 @@ const manifest: chrome.runtime.ManifestV3 = {
   name: packageJson.name,
   version: packageJson.version,
   description: packageJson.description,
-  permissions: ["activeTab", "tabs", "scripting", "webRequest", "storage"], // storage later for storage.sync
+  permissions: ["activeTab", "tabs", "webRequest", "storage"], // storage later for storage.sync
   host_permissions: ["https://*/*"],
   externally_connectable: {
     matches: ["https://www.youtube.com/*"],
