@@ -1,10 +1,15 @@
 export type FolderData = {
 	[userId: string]: { [folderName: string]: string[] };
 };
+export type FilterData = {
+	titles: string[];
+	itemCount: number;
+	nextStart: number;
+};
 export type FlaggedMessage = {
 	type: string;
 	flag: boolean;
-	data: { [key: string]: number } | null;
+	data: FilterData | null;
 };
 
 export const STORAGE_KEY = "YSO-KEY";

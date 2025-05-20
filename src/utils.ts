@@ -36,7 +36,6 @@ export async function resetStorage(folders: NodeListOf<Element> | null = null) {
 }
 
 export async function getAllStoredFolders(): Promise<FolderData> {
-	console.log(await chrome.storage.sync.get(null));
 	const value = await chrome.storage.sync.get(STORAGE_KEY);
 	return value?.[STORAGE_KEY];
 }
@@ -96,20 +95,18 @@ export async function prependNewSubscription(node: Element) {
 	chrome.storage.session.set({ [SUB_ORDER_KEY]: order });
 }
 
-export function waitForElementLoad(selector: string): Promise<HTMLElement> {
+export function waitForElementLoad(
+	selector: string,
+	parent = document.body,
+): Promise<HTMLElement> {
 	return new Promise((resolve, reject) => {
 		if (document.querySelector(selector)) {
 			return resolve(document.querySelector(selector) as HTMLElement);
 		}
 
-		const observer = new MutationObserver(() => {
-			if (document.querySelector(selector)) {
-				observer.disconnect();
-				resolve(document.querySelector(selector) as HTMLElement);
-			}
-		});
+		const observer = new MutationObserver(elementLoaded);
 
-		observer.observe(document.body, {
+		observer.observe(parent, {
 			childList: true,
 			subtree: true,
 		});
@@ -124,6 +121,37 @@ export function waitForElementLoad(selector: string): Promise<HTMLElement> {
 				observer.disconnect();
 				clearTimeout(timeoutID);
 				resolve(document.querySelector(selector) as HTMLElement);
+			}
+		}
+	});
+}
+
+export function waitForVideoCardLoad(
+	prevCount: number,
+	videoCards: HTMLCollection,
+	container: Element,
+): Promise<void> {
+	return new Promise((resolve) => {
+		if (videoCards.length - prevCount > 10) {
+			return resolve();
+		}
+
+		const observer = new MutationObserver(videoCardLoaded);
+
+		observer.observe(container, {
+			childList: true,
+		});
+
+		const timeoutId = setTimeout(() => {
+			console.log("timeout reached");
+			resolve();
+		}, 5000);
+
+		function videoCardLoaded() {
+			if (videoCards.length - prevCount > 10) {
+				clearTimeout(timeoutId);
+				observer.disconnect();
+				resolve();
 			}
 		}
 	});

@@ -11,6 +11,8 @@ import {
 	getAllStoredFolders,
 	getUserStoredFolders,
 	getCurrId,
+	sleep,
+	waitForVideoCardLoad,
 } from "./utils";
 
 const active = document.createAttribute("active");
@@ -140,12 +142,41 @@ export function toggleOption(this: HTMLDivElement, e: MouseEvent) {
 }
 
 export const filterContent = async (
-	title: string,
-	removeFilter: boolean,
-	start = 0,
+	channelTitles: string[],
+	itemsFiltered = 0,
+	start = 1,
 ) => {
-	const folders = await getUserStoredFolders();
-	const channelTitles = folders[title];
+	const query =
+		'ytd-two-column-browse-results-renderer[page-subtype="subscriptions"] #contents';
+	const contentContainer = document.querySelector(query);
+	const videoCards = contentContainer.children;
+	const firstColumnAttribute = "is-in-first-column";
+	const itemsPerRow = Number(videoCards[1].getAttribute("items-per-row"));
+	let itemCount = itemsFiltered;
+	const anchorId = "#avatar-link";
+	const endTag = "YTD-CONTINUATION-ITEM-RENDERER";
+	let idx = start;
+	await waitForVideoCardLoad(start, videoCards, contentContainer);
+	while (videoCards[idx].tagName !== endTag) {
+		const card = videoCards[idx++] as HTMLElement;
+		card.removeAttribute(firstColumnAttribute);
+		const anchor = card.querySelector(anchorId) as HTMLAnchorElement;
+		if (!anchor || !channelTitles.includes(anchor.title)) {
+			card.style.display = "none";
+			continue;
+		}
+		card.removeAttribute("style");
+		if (itemCount % itemsPerRow === 0)
+			card.setAttribute(firstColumnAttribute, "");
+		itemCount++;
+	}
+	chrome.storage.session.set({
+		filter: { titles: channelTitles, itemCount, nextStart: idx },
+	});
+};
+
+export const unfilterContent = () => {
+	chrome.storage.session.remove("filter");
 	const query =
 		'ytd-two-column-browse-results-renderer[page-subtype="subscriptions"] #contents';
 	const contentContainer = document.querySelector(query);
@@ -154,36 +185,19 @@ export const filterContent = async (
 	const firstColumnAttribute = "is-in-first-column";
 	const itemsPerRow = Number(videoCards[1].getAttribute("items-per-row"));
 	let idx = 0;
-	if (removeFilter) {
-		// removing filter
-		chrome.storage.session.remove("filter");
-		for (let i = 1; i < contentLength - 1; i++) {
-			const card = videoCards[i] as HTMLElement;
-			card.removeAttribute(firstColumnAttribute);
-			card.removeAttribute("style");
-			if (idx % itemsPerRow === 0) card.setAttribute(firstColumnAttribute, "");
-			idx++;
-		}
-		return;
-	}
-	idx = start;
-	const anchorId = "#avatar-link";
 	for (let i = 1; i < contentLength - 1; i++) {
 		const card = videoCards[i] as HTMLElement;
 		card.removeAttribute(firstColumnAttribute);
-		const anchor = card.querySelector(anchorId) as HTMLAnchorElement;
-		if (!anchor || !channelTitles.includes(anchor.title)) {
-			card.style.display = "none";
-			continue;
-		}
+		card.removeAttribute("style");
 		if (idx % itemsPerRow === 0) card.setAttribute(firstColumnAttribute, "");
 		idx++;
 	}
-	chrome.storage.session.set({ filter: { title, start: idx } });
 };
 
 export async function toggleCollapsible(this: HTMLDivElement, e: MouseEvent) {
 	const clickedOn = e.target as HTMLElement;
+
+	// if clicking the channel inside the folder
 	if (![EXPAND_CLASS, this.className].includes(clickedOn.className)) {
 		// mimic channel highlighting when redirected to specific channel
 		for (const node of this.querySelectorAll(CHANNEL_TAG)) {
@@ -192,12 +206,26 @@ export async function toggleCollapsible(this: HTMLDivElement, e: MouseEvent) {
 		clickedOn.closest(CHANNEL_TAG).setAttributeNode(active);
 		return;
 	}
+	// prevent action if in edit mode
 	if (this.classList.contains("edit")) return;
 
-	this.classList.toggle("hide");
-	if (window.location.pathname !== "/feed/subscriptions") return;
-
-	await filterContent(this.title, this.classList.contains("hide"));
+	if (window.location.pathname === "/feed/subscriptions") {
+		if (this.classList.contains("hide")) {
+			for (const folder of this.parentElement.querySelectorAll(
+				`.${FOLDER_CLASS}`,
+			)) {
+				folder.classList.add("hide");
+			}
+			const folders = await getUserStoredFolders();
+			await filterContent(folders[this.title]);
+		} else {
+			unfilterContent();
+		}
+	}
+	// settimeout smoothes the folder accordion animation
+	setTimeout(() => {
+		this.classList.toggle("hide");
+	}, 0);
 }
 
 export function deactivateToggleChannel(

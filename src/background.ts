@@ -1,4 +1,4 @@
-import type { FlaggedMessage } from "./constants";
+import type { FlaggedMessage, FilterData } from "./constants";
 
 const WIDTH_LG = 1312;
 const YOUTUBE_ORIGIN = "https://www.youtube.com";
@@ -55,7 +55,6 @@ chrome.runtime.onMessageExternal.addListener(async ({ msg }, sender, res) => {
 		res(value?.[SUB_ORDER_KEY]);
 	}
 	if (msg === "browse") {
-		console.log("here in browse");
 		chrome.storage.session.set({ browse: true });
 	}
 });
@@ -78,20 +77,21 @@ chrome.webRequest.onCompleted.addListener(
 			return;
 		}
 		const { pathname } = new URL(tab.url);
+		// console.log(details, pathname);
+		// video cards loading from other page should reset
 		if (pathname !== "/feed/subscriptions") return;
-		const { filter }: { filter: { title: string; start: number } | null } =
+		const { filter }: { filter: FilterData | null } =
 			await chrome.storage.session.get("filter");
+		// console.log(filter);
 		const { browse } = await chrome.storage.session.get("browse");
-		console.log(browse, filter);
+		// console.log(browse);
 		chrome.storage.session.remove("browse");
-		const allsession = await chrome.storage.session.get(null);
-		console.log(allsession);
 		if (!filter || !browse) return;
 		chrome.tabs
 			.sendMessage<FlaggedMessage>(tab.id, {
 				type: "filter",
 				flag: false,
-				data: { [filter.title]: filter.start },
+				data: filter,
 			})
 			.catch((e) => console.error(e));
 	},

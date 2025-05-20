@@ -33,7 +33,7 @@ const initializeNavBar = async (
 				const attr = document.createAttribute("opened");
 				navBar.style.display = "none"; // hide action being done
 				navBar.setAttributeNode(attr);
-				waitForElementLoad(SubscriptionExpander)
+				waitForElementLoad(SubscriptionExpander, navBar)
 					.then((expander) => {
 						res(expander);
 					})
@@ -74,7 +74,7 @@ const initUserInfo = async (): Promise<HTMLElement> => {
 	userInfo.style.display = "none";
 	const avatarButton = await waitForElementLoad("#avatar-btn");
 	avatarButton.click();
-	const handle = await waitForElementLoad("#channel-handle");
+	const handle = await waitForElementLoad("#channel-handle", userInfo);
 	const { title } = handle;
 	await storeUserId(title);
 	avatarButton.click();
@@ -123,9 +123,7 @@ const main = () => {
 					response(!!document.querySelector(".yso-subscription-list"));
 					break;
 				case "filter": {
-					const entry = Object.entries(data);
-					const [title, start] = entry[0];
-					await filterContent(title, false, start);
+					await filterContent(data.titles, data.itemCount, data.nextStart);
 				}
 			}
 		},
