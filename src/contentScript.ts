@@ -48,15 +48,6 @@ const expandSubscription = async (expander: Element, list: Element) => {
 	await updateSubscriptionOrder(list);
 	sortSubscriptions(list);
 };
-const injectScript = () => {
-	const s = document.createElement("script");
-	(document.head || document.documentElement).appendChild(s);
-	s.onload = function () {
-		const t = this as HTMLScriptElement;
-		t.remove();
-	};
-	s.src = chrome.runtime.getURL("src/injected/index.js");
-};
 
 // the click registry to close userinfo takes too long, so restore userinfo display in navbar section
 const initUserInfo = async (): Promise<HTMLElement> => {
@@ -80,7 +71,6 @@ const main = () => {
 		): Promise<void> => {
 			switch (type) {
 				case "initialize":
-					injectScript();
 					initUserInfo()
 						.then((userInfo) => initializeNavBar(flag, userInfo))
 						.then(async (expander: HTMLElement) => {
