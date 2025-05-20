@@ -141,15 +141,23 @@ export function toggleOption(this: HTMLDivElement, e: MouseEvent) {
 	}
 }
 
+const DefaultSubHeading = "Latest";
+
 export const filterContent = async (
 	channelTitles: string[],
-	itemsFiltered = 0,
-	start = 1,
+	itemsFiltered: number,
+	start: number,
+	title = "",
 ) => {
 	const query =
 		'ytd-two-column-browse-results-renderer[page-subtype="subscriptions"] #contents';
 	const contentContainer = document.querySelector(query);
 	const videoCards = contentContainer.children;
+	if (start === 1) {
+		const header = videoCards[0];
+		const headerTitle = header.querySelector("#title");
+		headerTitle.textContent = `${DefaultSubHeading} of ${title}`;
+	}
 	const firstColumnAttribute = "is-in-first-column";
 	const itemsPerRow = Number(videoCards[1].getAttribute("items-per-row"));
 	let itemCount = itemsFiltered;
@@ -181,6 +189,9 @@ export const unfilterContent = () => {
 		'ytd-two-column-browse-results-renderer[page-subtype="subscriptions"] #contents';
 	const contentContainer = document.querySelector(query);
 	const videoCards = contentContainer.children;
+	const header = videoCards[0];
+	const headerTitle = header.querySelector("#title");
+	headerTitle.textContent = DefaultSubHeading;
 	const contentLength = videoCards.length;
 	const firstColumnAttribute = "is-in-first-column";
 	const itemsPerRow = Number(videoCards[1].getAttribute("items-per-row"));
@@ -217,7 +228,7 @@ export async function toggleCollapsible(this: HTMLDivElement, e: MouseEvent) {
 				folder.classList.add("hide");
 			}
 			const folders = await getUserStoredFolders();
-			await filterContent(folders[this.title]);
+			await filterContent(folders[this.title], 0, 1, this.title);
 		} else {
 			unfilterContent();
 		}
