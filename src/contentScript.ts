@@ -19,33 +19,23 @@ const initializeNavBar = async (
 	userInfo: HTMLElement,
 ): Promise<HTMLElement> => {
 	return new Promise((res, rej) => {
-		if (isLoaded) {
-			waitForElementLoad(SubscriptionExpander)
+		waitForElementLoad("#guide").then((navBar) => {
+			if (!isLoaded || !navBar.getAttribute("opened") !== null) {
+				navBar.style.display = "none"; // hide action being done
+				navBar.setAttribute("opened", "");
+			}
+			waitForElementLoad(SubscriptionExpander, navBar)
 				.then((expander) => {
 					res(expander);
 				})
 				.catch((reason) => rej(reason))
 				.finally(() => {
+					// close the side bar and re-display it
+					navBar.removeAttribute("opened");
+					navBar.style.removeProperty("display");
 					userInfo.style.removeProperty("display");
 				});
-		} else {
-			waitForElementLoad("#guide").then((navBar) => {
-				const attr = document.createAttribute("opened");
-				navBar.style.display = "none"; // hide action being done
-				navBar.setAttributeNode(attr);
-				waitForElementLoad(SubscriptionExpander, navBar)
-					.then((expander) => {
-						res(expander);
-					})
-					.catch((reason) => rej(reason))
-					.finally(() => {
-						// close the side bar and re-display it
-						navBar.removeAttribute("opened");
-						navBar.style.removeProperty("display");
-						userInfo.style.removeProperty("display");
-					});
-			});
-		}
+		});
 	});
 };
 const expandSubscription = async (expander: Element, list: Element) => {
