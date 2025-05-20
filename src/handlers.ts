@@ -11,8 +11,8 @@ import {
 	getAllStoredFolders,
 	getUserStoredFolders,
 	getCurrId,
-	sleep,
 	waitForVideoCardLoad,
+	watchItemPerRowChange,
 } from "./utils";
 
 const active = document.createAttribute("active");
@@ -142,32 +142,51 @@ export function toggleOption(this: HTMLDivElement, e: MouseEvent) {
 }
 
 const DefaultSubHeading = "Latest";
-
+const FirstColumnAttribute = "is-in-first-column";
+const getFilterItems = (): {
+	container: Element;
+	videoCards: HTMLCollection;
+	title: Element;
+	itemsPerRow: number;
+} => {
+	const query =
+		'ytd-two-column-browse-results-renderer[page-subtype="subscriptions"] #contents';
+	const container = document.querySelector(query);
+	const videoCards = container.children;
+	const header = videoCards[0];
+	const title = header.querySelector("#title");
+	const itemsPerRow = Number(videoCards[1].getAttribute("items-per-row"));
+	return {
+		container,
+		videoCards,
+		title,
+		itemsPerRow,
+	};
+};
 export const filterContent = async (
 	channelTitles: string[],
 	itemsFiltered: number,
 	start: number,
-	title = "",
+	folderName = "",
 ) => {
-	const query =
-		'ytd-two-column-browse-results-renderer[page-subtype="subscriptions"] #contents';
-	const contentContainer = document.querySelector(query);
-	const videoCards = contentContainer.children;
+	const { container, videoCards, title, itemsPerRow } = getFilterItems();
 	if (start === 1) {
-		const header = videoCards[0];
-		const headerTitle = header.querySelector("#title");
-		headerTitle.textContent = `${DefaultSubHeading} of ${title}`;
+		chrome.storage.session.get("mutationObserver", ({ mutationObserver }) => {
+			if (mutationObserver) return;
+			chrome.storage.session.set({
+				mutationObserver: watchItemPerRowChange(videoCards[1]),
+			});
+		});
+		title.textContent = `${DefaultSubHeading} of ${folderName}`;
 	}
-	const firstColumnAttribute = "is-in-first-column";
-	const itemsPerRow = Number(videoCards[1].getAttribute("items-per-row"));
-	let itemCount = itemsFiltered;
 	const anchorId = "#avatar-link";
 	const endTag = "YTD-CONTINUATION-ITEM-RENDERER";
+	let itemCount = itemsFiltered;
 	let idx = start;
-	await waitForVideoCardLoad(start, videoCards, contentContainer);
-	while (videoCards[idx].tagName !== endTag) {
-		const card = videoCards[idx++] as HTMLElement;
-		card.removeAttribute(firstColumnAttribute);
+	await waitForVideoCardLoad(start, videoCards, container);
+	for (; videoCards[idx].tagName !== endTag; idx++) {
+		const card = videoCards[idx] as HTMLElement;
+		card.removeAttribute(FirstColumnAttribute);
 		const anchor = card.querySelector(anchorId) as HTMLAnchorElement;
 		if (!anchor || !channelTitles.includes(anchor.title)) {
 			card.style.display = "none";
@@ -175,7 +194,7 @@ export const filterContent = async (
 		}
 		card.removeAttribute("style");
 		if (itemCount % itemsPerRow === 0)
-			card.setAttribute(firstColumnAttribute, "");
+			card.setAttribute(FirstColumnAttribute, "");
 		itemCount++;
 	}
 	chrome.storage.session.set({
@@ -183,24 +202,30 @@ export const filterContent = async (
 	});
 };
 
-export const unfilterContent = () => {
-	chrome.storage.session.remove("filter");
-	const query =
-		'ytd-two-column-browse-results-renderer[page-subtype="subscriptions"] #contents';
-	const contentContainer = document.querySelector(query);
-	const videoCards = contentContainer.children;
-	const header = videoCards[0];
-	const headerTitle = header.querySelector("#title");
-	headerTitle.textContent = DefaultSubHeading;
+export const reorganizeFilter = () => {
+	const { videoCards, itemsPerRow } = getFilterItems();
 	const contentLength = videoCards.length;
-	const firstColumnAttribute = "is-in-first-column";
-	const itemsPerRow = Number(videoCards[1].getAttribute("items-per-row"));
 	let idx = 0;
 	for (let i = 1; i < contentLength - 1; i++) {
 		const card = videoCards[i] as HTMLElement;
-		card.removeAttribute(firstColumnAttribute);
+		card.removeAttribute(FirstColumnAttribute);
+		if (card.style?.display === "none") continue;
+		if (idx % itemsPerRow === 0) card.setAttribute(FirstColumnAttribute, "");
+		idx++;
+	}
+};
+
+export const unfilterContent = () => {
+	chrome.storage.session.remove("filter");
+	const { videoCards, title, itemsPerRow } = getFilterItems();
+	title.textContent = DefaultSubHeading;
+	const contentLength = videoCards.length;
+	let idx = 0;
+	for (let i = 1; i < contentLength - 1; i++) {
+		const card = videoCards[i] as HTMLElement;
+		card.removeAttribute(FirstColumnAttribute);
 		card.removeAttribute("style");
-		if (idx % itemsPerRow === 0) card.setAttribute(firstColumnAttribute, "");
+		if (idx % itemsPerRow === 0) card.setAttribute(FirstColumnAttribute, "");
 		idx++;
 	}
 };

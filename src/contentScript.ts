@@ -9,7 +9,7 @@ import {
 	updateSubscriptionOrder,
 	waitForElementLoad,
 } from "./utils";
-import { filterContent } from "./handlers";
+import { filterContent, reorganizeFilter } from "./handlers";
 
 const SubscriptionExpander =
 	"ytd-guide-collapsible-entry-renderer.ytd-guide-section-renderer";
@@ -114,7 +114,10 @@ const main = () => {
 					break;
 				case "filter": {
 					await filterContent(data.titles, data.itemCount, data.nextStart);
+					break;
 				}
+				case "rowChange":
+					reorganizeFilter();
 			}
 		},
 	);

@@ -157,6 +157,16 @@ export function waitForVideoCardLoad(
 	});
 }
 
+export function watchItemPerRowChange(target: Element): MutationObserver {
+	const observer = new MutationObserver(() => {
+		chrome.runtime.sendMessage({ msg: "rowChange" });
+	});
+	observer.observe(target, {
+		attributeFilter: ["items-per-row"],
+	});
+	return observer;
+}
+
 const SESSIONUSER = "sessionUser";
 
 export async function storeUserId(title: string) {
