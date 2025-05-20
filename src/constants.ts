@@ -1,12 +1,16 @@
 export type FolderData = {
-  [userId: string]: { [folderName: string]: string[] };
+	[userId: string]: { [folderName: string]: string[] };
+};
+export type FilterData = {
+	titles: string[];
+	itemCount: number;
+	nextStart: number;
 };
 export type FlaggedMessage = {
-  type: string;
-  flag: boolean;
+	type: string;
+	flag: boolean;
+	data: FilterData | null;
 };
-
-
 
 export const STORAGE_KEY = "YSO-KEY";
 export const SUB_ORDER_KEY = "YSO-SUBSCRIPTION-ORDER";
