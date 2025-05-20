@@ -34,8 +34,7 @@ chrome.tabs.onUpdated.addListener(
 			},
 		);
 		if (check) return;
-		chrome.storage.session.remove("browse");
-		chrome.storage.session.remove("filter");
+		chrome.storage.session.clear();
 
 		chrome.storage.session.setAccessLevel({ accessLevel });
 		chrome.tabs
@@ -48,14 +47,31 @@ chrome.tabs.onUpdated.addListener(
 	},
 );
 
-chrome.runtime.onMessageExternal.addListener(async ({ msg }, sender, res) => {
+chrome.runtime.onMessageExternal.addListener(async (msg, sender, res) => {
 	if (sender.origin !== YOUTUBE_ORIGIN) return;
 	if (msg === "order") {
 		const value = await chrome.storage.session.get(SUB_ORDER_KEY);
 		res(value?.[SUB_ORDER_KEY]);
 	}
 	if (msg === "browse") {
+		console.log("browse message");
 		chrome.storage.session.set({ browse: true });
+	}
+});
+
+chrome.runtime.onMessage.addListener(async ({ msg }) => {
+	if (msg === "rowChange") {
+		const tab = await getCurrentTab();
+		const { filter }: { filter: FilterData | null } =
+			await chrome.storage.session.get("filter");
+		if (!filter) return;
+		chrome.tabs
+			.sendMessage<FlaggedMessage>(tab.id, {
+				type: "rowChange",
+				flag: true,
+				data: null,
+			})
+			.catch((e) => console.log(e));
 	}
 });
 
@@ -64,6 +80,7 @@ const BROWSE_URL = "https://www.youtube.com/youtubei/v1/browse*";
 
 chrome.webRequest.onCompleted.addListener(
 	async (details) => {
+		console.log(details);
 		const tab = await getCurrentTab();
 		if (details.url.includes("subscription")) {
 			const flag = details.url.includes("unsubscribe");
@@ -77,14 +94,11 @@ chrome.webRequest.onCompleted.addListener(
 			return;
 		}
 		const { pathname } = new URL(tab.url);
-		// console.log(details, pathname);
-		// video cards loading from other page should reset
 		if (pathname !== "/feed/subscriptions") return;
 		const { filter }: { filter: FilterData | null } =
 			await chrome.storage.session.get("filter");
-		// console.log(filter);
 		const { browse } = await chrome.storage.session.get("browse");
-		// console.log(browse);
+		console.log(filter, browse);
 		chrome.storage.session.remove("browse");
 		if (!filter || !browse) return;
 		chrome.tabs
