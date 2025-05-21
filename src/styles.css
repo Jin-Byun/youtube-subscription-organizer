@@ -177,3 +177,13 @@ ytd-guide-entry-renderer[newFolderAdd="true"] {
     }
   }
 }
+
+
+/*  make it so that 
+    all items inside this class is 
+    hidden from view unless specified
+*/
+
+.yso-filter > *:not(.yso-filter, ytd-continuation-item-renderer) {
+  display: none;
+}

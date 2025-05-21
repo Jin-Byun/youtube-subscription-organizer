@@ -126,45 +126,28 @@ export function waitForElementLoad(
 	});
 }
 
-export function waitForVideoCardLoad(
-	prevCount: number,
-	videoCards: HTMLCollection,
+export function observeContentChange(
 	container: Element,
-): Promise<void> {
-	return new Promise((resolve) => {
-		if (videoCards.length - prevCount > 10) {
-			return resolve();
-		}
-
-		const observer = new MutationObserver(videoCardLoaded);
-
-		observer.observe(container, {
-			childList: true,
-		});
-
-		const timeoutId = setTimeout(() => {
-			console.log("timeout reached");
-			resolve();
-		}, 5000);
-
-		function videoCardLoaded() {
-			if (videoCards.length - prevCount > 10) {
-				clearTimeout(timeoutId);
-				observer.disconnect();
-				resolve();
-			}
-		}
-	});
-}
-
-export function watchItemPerRowChange(target: Element): MutationObserver {
-	const observer = new MutationObserver(() => {
+	columnIndicator: Element,
+): MutationObserver[] {
+	const columnNumberChange = new MutationObserver(() => {
 		chrome.runtime.sendMessage({ msg: "rowChange" });
 	});
-	observer.observe(target, {
+	columnNumberChange.observe(columnIndicator, {
 		attributeFilter: ["items-per-row"],
 	});
-	return observer;
+	let prevCount = 0;
+	const contentLoading = new MutationObserver(() => {
+		const newCount = container.children.length;
+		if (newCount > prevCount) {
+			chrome.runtime.sendMessage({ msg: "itemLoaded" });
+		}
+		prevCount = newCount;
+	});
+	contentLoading.observe(container, {
+		childList: true,
+	});
+	return [columnNumberChange, contentLoading];
 }
 
 const SESSIONUSER = "sessionUser";

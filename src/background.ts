@@ -47,36 +47,33 @@ chrome.tabs.onUpdated.addListener(
 	},
 );
 
-chrome.runtime.onMessageExternal.addListener(async (msg, sender, res) => {
-	if (sender.origin !== YOUTUBE_ORIGIN) return;
-	if (msg === "order") {
-		const value = await chrome.storage.session.get(SUB_ORDER_KEY);
-		res(value?.[SUB_ORDER_KEY]);
-	}
-	if (msg === "browse") {
-		console.log("browse message");
-		chrome.storage.session.set({ browse: true });
-	}
-});
-
 chrome.runtime.onMessage.addListener(async ({ msg }) => {
-	if (msg === "rowChange") {
-		const tab = await getCurrentTab();
-		const { filter }: { filter: FilterData | null } =
-			await chrome.storage.session.get("filter");
-		if (!filter) return;
-		chrome.tabs
-			.sendMessage<FlaggedMessage>(tab.id, {
-				type: "rowChange",
-				flag: true,
-				data: null,
-			})
-			.catch((e) => console.log(e));
+	const tab = await getCurrentTab();
+	const { filter }: { filter: FilterData | null } =
+		await chrome.storage.session.get("filter");
+	if (!filter) return;
+	switch (msg) {
+		case "rowChange":
+			chrome.tabs
+				.sendMessage<FlaggedMessage>(tab.id, {
+					type: "rowChange",
+					flag: true,
+					data: null,
+				})
+				.catch((e) => console.log(e));
+			break;
+		case "itemLoaded":
+			chrome.tabs
+				.sendMessage<FlaggedMessage>(tab.id, {
+					type: "filter",
+					flag: true,
+					data: filter,
+				})
+				.catch((e) => console.log(e));
 	}
 });
 
 const SUB_URL = "https://www.youtube.com/youtubei/v1/subscription/*";
-const BROWSE_URL = "https://www.youtube.com/youtubei/v1/browse*";
 
 chrome.webRequest.onCompleted.addListener(
 	async (details) => {
@@ -93,21 +90,6 @@ chrome.webRequest.onCompleted.addListener(
 				.catch((e) => console.error(e));
 			return;
 		}
-		const { pathname } = new URL(tab.url);
-		if (pathname !== "/feed/subscriptions") return;
-		const { filter }: { filter: FilterData | null } =
-			await chrome.storage.session.get("filter");
-		const { browse } = await chrome.storage.session.get("browse");
-		console.log(filter, browse);
-		chrome.storage.session.remove("browse");
-		if (!filter || !browse) return;
-		chrome.tabs
-			.sendMessage<FlaggedMessage>(tab.id, {
-				type: "filter",
-				flag: false,
-				data: filter,
-			})
-			.catch((e) => console.error(e));
 	},
-	{ urls: [SUB_URL, BROWSE_URL] },
+	{ urls: [SUB_URL] },
 );

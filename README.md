@@ -22,7 +22,7 @@ I have few hobbies/interests. They include programming(Go, Rust, JS/TS, Elixir, 
 - [x] Respond to subscription change (subscribe, unsubscribe)
 - [x] Check the user Id to make sure that the directory is created per id
 - [x] Set up chrome-storage api for sync
-- [ ] Filtering logic for each folder when on subscription page.
+- [x] Filtering logic for each folder when on subscription page.
 - [ ] Make extension popup for function toggles and proper logo
 - [ ] More
 

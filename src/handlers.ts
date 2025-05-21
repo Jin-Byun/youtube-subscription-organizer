@@ -11,8 +11,7 @@ import {
 	getAllStoredFolders,
 	getUserStoredFolders,
 	getCurrId,
-	waitForVideoCardLoad,
-	watchItemPerRowChange,
+	observeContentChange,
 } from "./utils";
 
 const active = document.createAttribute("active");
@@ -143,6 +142,7 @@ export function toggleOption(this: HTMLDivElement, e: MouseEvent) {
 
 const DefaultSubHeading = "Latest";
 const FirstColumnAttribute = "is-in-first-column";
+const FilterClass = "yso-filter";
 const getFilterItems = (): {
 	container: Element;
 	videoCards: HTMLCollection;
@@ -171,10 +171,11 @@ export const filterContent = async (
 ) => {
 	const { container, videoCards, title, itemsPerRow } = getFilterItems();
 	if (start === 1) {
-		chrome.storage.session.get("mutationObserver", ({ mutationObserver }) => {
-			if (mutationObserver) return;
+		container.classList.add(FilterClass);
+		chrome.storage.session.get("mutationObservers", ({ mutationObservers }) => {
+			if (mutationObservers) return;
 			chrome.storage.session.set({
-				mutationObserver: watchItemPerRowChange(videoCards[1]),
+				mutationObservers: observeContentChange(container, videoCards[1]),
 			});
 		});
 		title.textContent = `${DefaultSubHeading} of ${folderName}`;
@@ -183,16 +184,15 @@ export const filterContent = async (
 	const endTag = "YTD-CONTINUATION-ITEM-RENDERER";
 	let itemCount = itemsFiltered;
 	let idx = start;
-	await waitForVideoCardLoad(start, videoCards, container);
 	for (; videoCards[idx].tagName !== endTag; idx++) {
-		const card = videoCards[idx] as HTMLElement;
+		const card = videoCards[idx];
 		card.removeAttribute(FirstColumnAttribute);
 		const anchor = card.querySelector(anchorId) as HTMLAnchorElement;
 		if (!anchor || !channelTitles.includes(anchor.title)) {
-			card.style.display = "none";
+			card.classList.remove(FilterClass);
 			continue;
 		}
-		card.removeAttribute("style");
+		card.classList.add(FilterClass);
 		if (itemCount % itemsPerRow === 0)
 			card.setAttribute(FirstColumnAttribute, "");
 		itemCount++;
@@ -209,7 +209,7 @@ export const reorganizeFilter = () => {
 	for (let i = 1; i < contentLength - 1; i++) {
 		const card = videoCards[i] as HTMLElement;
 		card.removeAttribute(FirstColumnAttribute);
-		if (card.style?.display === "none") continue;
+		if (!card.classList.contains(FilterClass)) continue;
 		if (idx % itemsPerRow === 0) card.setAttribute(FirstColumnAttribute, "");
 		idx++;
 	}
@@ -217,14 +217,15 @@ export const reorganizeFilter = () => {
 
 export const unfilterContent = () => {
 	chrome.storage.session.remove("filter");
-	const { videoCards, title, itemsPerRow } = getFilterItems();
+	const { container, videoCards, title, itemsPerRow } = getFilterItems();
 	title.textContent = DefaultSubHeading;
 	const contentLength = videoCards.length;
 	let idx = 0;
+	container.classList.remove(FilterClass);
 	for (let i = 1; i < contentLength - 1; i++) {
 		const card = videoCards[i] as HTMLElement;
 		card.removeAttribute(FirstColumnAttribute);
-		card.removeAttribute("style");
+		card.classList.remove(FilterClass);
 		if (idx % itemsPerRow === 0) card.setAttribute(FirstColumnAttribute, "");
 		idx++;
 	}
