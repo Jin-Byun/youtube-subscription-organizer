@@ -1,13 +1,19 @@
-import { FOLDER_CLASS, type FlaggedMessage } from "./constants";
-import { createNewFolderButton, initializeStoredFolders } from "./components";
+import { CHANNEL_TAG, FOLDER_CLASS, type FlaggedMessage } from "./constants";
 import {
-	prependNewSubscription,
+	channelOrderLabels,
+	createNewFolderButton,
+	prependExtensionItems,
+} from "./components";
+import {
+	getSubscriptionOrder,
+	addSubscriptionOrder,
 	resetStorage,
 	sleep,
 	sortSubscriptions,
 	storeUserId,
-	updateSubscriptionOrder,
+	setSubscriptionOrder,
 	waitForElementLoad,
+	removeChannelFromFolder,
 } from "./utils";
 import { filterContent, reorganizeFilter } from "./handlers";
 
@@ -45,7 +51,7 @@ const expandSubscription = async (expander: Element, list: Element) => {
 	const expandedItems = expander.querySelector("#expandable-items");
 	list.append(...expandedItems.children);
 	expander.remove();
-	await updateSubscriptionOrder(list);
+	await setSubscriptionOrder(list);
 	sortSubscriptions(list);
 };
 
@@ -78,7 +84,7 @@ const main = () => {
 							const subscriptionList = expander.closest("#items");
 							subscriptionList.classList.add("yso-subscription-list");
 							await expandSubscription(expander, subscriptionList);
-							await initializeStoredFolders(subscriptionList);
+							await prependExtensionItems(subscriptionList);
 							const subscriptionTabLabel =
 								subscriptionList.previousElementSibling as HTMLElement;
 							const header =
@@ -116,29 +122,41 @@ const main = () => {
 async function handleUpdate(flag: boolean) {
 	const subList = document.querySelector(".yso-subscription-list");
 	if (flag) {
-		// update the original order array
-		updateSubscriptionOrder(subList);
-		// re-sort alphabetically
-		sortSubscriptions(subList);
-		// setup folders
-		await initializeStoredFolders(subList);
-		// update storedData in case of folder content change
-		await resetStorage(subList.querySelectorAll(`.${FOLDER_CLASS}`));
+		const orderLabels = Array.from(
+			subList.getElementsByTagName("yso-order"),
+			(v: HTMLElement) => v.title,
+		);
+		const prevSet = new Set(await getSubscriptionOrder());
+		const removedItem = prevSet
+			.difference(new Set(orderLabels))
+			[Symbol.iterator]()
+			.next().value;
+		const targetAnchor = subList.querySelector(
+			`${CHANNEL_TAG} > a[title="${removedItem}"]`,
+		);
+		const target = targetAnchor.parentElement;
+		const parent = target.parentElement;
+		if (parent.classList.contains(FOLDER_CLASS)) {
+			removeChannelFromFolder(removedItem, parent.title);
+		}
+		target.remove();
+		await setSubscriptionOrder(orderLabels);
 		return;
 	}
 	// new subscription found on top of folders
 	let newSub = subList.firstElementChild;
-	while (newSub.tagName === "DIV") {
+	while (newSub.tagName !== CHANNEL_TAG.toUpperCase()) {
 		await sleep(200);
 		newSub = subList.firstElementChild;
 	}
 	// update order array
-	await prependNewSubscription(newSub);
+	const title = await addSubscriptionOrder(newSub);
 	// place new subscription below all folders
 	const allFolders = subList.querySelectorAll(`.${FOLDER_CLASS}`);
 	if (allFolders.length > 0) {
 		allFolders[allFolders.length - 1].after(newSub);
 	}
+	subList.prepend(channelOrderLabels(title));
 }
 
 main();

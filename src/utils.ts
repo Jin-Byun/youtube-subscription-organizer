@@ -23,6 +23,18 @@ export async function storeFolderLocal(
 	});
 }
 
+export async function removeChannelFromFolder(
+	removedTitle: string,
+	folderTitle: string,
+) {
+	const allFolders = await getAllStoredFolders();
+	const id = await getCurrId();
+	const folder = allFolders[id][folderTitle];
+	const newFolder = folder.filter((title: string) => title !== removedTitle);
+	allFolders[id][folderTitle] = newFolder;
+	await chrome.storage.sync.set({ [STORAGE_KEY]: allFolders });
+}
+
 export async function resetStorage(folders: NodeListOf<Element> | null = null) {
 	await chrome.storage.sync.set({ [STORAGE_KEY]: {} });
 	if (folders === null) return;
@@ -70,11 +82,13 @@ export function sortSubscriptions(
 	}
 }
 
-export async function updateSubscriptionOrder(list: Element) {
-	const order = await getSubscriptionOrder();
-	if (order) return;
+export async function setSubscriptionOrder(list: Element | string[]) {
+	if (Array.isArray(list)) {
+		await chrome.storage.session.set({ [SUB_ORDER_KEY]: list });
+		return;
+	}
 	const subscriptions = list.children;
-	const titleArr: string[] = [];
+	const titleArr = new Array<string>();
 	for (const el of subscriptions) {
 		const a = el.firstElementChild as HTMLAnchorElement;
 		if (!a?.title) continue;
@@ -83,16 +97,17 @@ export async function updateSubscriptionOrder(list: Element) {
 	chrome.storage.session.set({ [SUB_ORDER_KEY]: titleArr });
 }
 
-export async function getSubscriptionOrder(): Promise<string[]> {
+export async function getSubscriptionOrder(): Promise<Array<string>> {
 	const value = await chrome.storage.session.get(SUB_ORDER_KEY);
 	return value?.[SUB_ORDER_KEY];
 }
 
-export async function prependNewSubscription(node: Element) {
+export async function addSubscriptionOrder(node: Element): Promise<string> {
 	const order = await getSubscriptionOrder();
-	const a = node.firstElementChild as HTMLAnchorElement;
-	order.unshift(a.title);
-	chrome.storage.session.set({ [SUB_ORDER_KEY]: order });
+	const { title } = node.firstElementChild as HTMLAnchorElement;
+	order.unshift(title);
+	await chrome.storage.session.set({ [SUB_ORDER_KEY]: order });
+	return title;
 }
 
 export function waitForElementLoad(
@@ -113,8 +128,8 @@ export function waitForElementLoad(
 
 		const timeoutID = setTimeout(() => {
 			observer.disconnect();
-			reject(`here ${selector}`);
-		}, 2000);
+			reject(`waited too long for: ${selector}`);
+		}, 5000);
 
 		function elementLoaded() {
 			if (document.querySelector(selector)) {

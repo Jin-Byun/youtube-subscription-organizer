@@ -77,7 +77,6 @@ const SUB_URL = "https://www.youtube.com/youtubei/v1/subscription/*";
 
 chrome.webRequest.onCompleted.addListener(
 	async (details) => {
-		console.log(details);
 		const tab = await getCurrentTab();
 		if (details.url.includes("subscription")) {
 			const flag = details.url.includes("unsubscribe");

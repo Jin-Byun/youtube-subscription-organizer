@@ -9,7 +9,6 @@ import {
 	PLACEHOLDER_ATTR,
 	LABEL_NOCHANNEL,
 	LABEL_DUPLICATE,
-	FolderData,
 } from "./constants";
 import {
 	handleDelete,
@@ -21,7 +20,12 @@ import {
 	toggleCollapsible,
 	toggleOption,
 } from "./handlers";
-import { storeFolderLocal, resetStorage, getUserStoredFolders } from "./utils";
+import {
+	storeFolderLocal,
+	resetStorage,
+	getUserStoredFolders,
+	getSubscriptionOrder,
+} from "./utils";
 
 const subscriptionFolder = (title: string): HTMLDivElement => {
 	const label = `<div class="${EXPAND_CLASS}">${title}</div>`;
@@ -136,23 +140,36 @@ export function createNewFolderButton(list: Element): HTMLButtonElement {
 	});
 	return button;
 }
-export async function initializeStoredFolders(list: Element) {
+
+export const channelOrderLabels = (label: string): HTMLElement => {
+	const div = document.createElement("yso-order");
+	div.style.display = "none";
+	div.title = label;
+	return div;
+};
+
+export async function prependExtensionItems(list: Element) {
 	const folders = await getUserStoredFolders();
-	if (!folders) {
-		await resetStorage();
-		return;
-	}
-	for (const [title, channels] of Object.entries(folders)) {
-		const folder = subscriptionFolder(title);
-		folder.style.setProperty(NUM_CHANNEL, `${channels.length}`);
-		const nodeList: Element[] = [];
-		for (const node of list.children) {
-			const a = node.firstElementChild as HTMLAnchorElement;
-			if (channels.includes(a.title)) {
-				nodeList.push(node);
+	if (folders) {
+		for (const [title, channels] of Object.entries(folders)) {
+			const folder = subscriptionFolder(title);
+			folder.style.setProperty(NUM_CHANNEL, `${channels.length}`);
+			const nodeList: Element[] = [];
+			for (const node of list.children) {
+				const a = node.firstElementChild as HTMLAnchorElement;
+				if (channels.includes(a.title)) {
+					nodeList.push(node);
+				}
 			}
+			folder.append(...nodeList);
+			list.prepend(folder);
 		}
-		folder.append(...nodeList);
-		list.prepend(folder);
+	} else {
+		await resetStorage();
 	}
+	const channelOrder = await getSubscriptionOrder();
+	const divLabels = channelOrder.map((title: string) =>
+		channelOrderLabels(title),
+	);
+	list.prepend(...divLabels);
 }
