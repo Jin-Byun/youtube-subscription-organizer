@@ -187,3 +187,7 @@ ytd-guide-entry-renderer[newFolderAdd="true"] {
 .yso-filter > *:not(.yso-filter, ytd-continuation-item-renderer) {
   display: none;
 }
+
+yso-order {
+   display: none;
+}

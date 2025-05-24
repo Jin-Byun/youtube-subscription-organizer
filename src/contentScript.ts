@@ -5,16 +5,18 @@ import {
 	prependExtensionItems,
 } from "./components";
 import {
-	getSubscriptionOrder,
-	addSubscriptionOrder,
-	resetStorage,
 	sleep,
 	sortSubscriptions,
-	storeUserId,
-	setSubscriptionOrder,
 	waitForElementLoad,
-	removeChannelFromFolder,
+	getSubList,
 } from "./utils";
+import {
+	addSubscriptionOrder,
+	getSubscriptionOrder,
+	setSubscriptionOrder,
+	storeUserId,
+	removeChannelFromFolder,
+} from "./storage";
 import { filterContent, reorganizeFilter } from "./handlers";
 
 const SubscriptionExpander =
@@ -90,10 +92,11 @@ const main = () => {
 							const header =
 								subscriptionTabLabel.firstElementChild as HTMLElement;
 							header.style.cursor = "pointer";
+							const subscriptionInteractionTab = document.querySelector(
+								'ytd-mini-guide-entry-renderer[aria-label="Subscriptions"]',
+							) as HTMLElement;
 							header.addEventListener("click", () => {
-								document
-									.querySelector(`a[href="/feed/subscriptions"]`)
-									.parentElement.click();
+								subscriptionInteractionTab.click();
 							});
 							subscriptionTabLabel.style.display = "flex";
 							subscriptionTabLabel.style.alignItems = "center";
@@ -106,7 +109,7 @@ const main = () => {
 					await handleUpdate(flag);
 					break;
 				case "check":
-					response(!!document.querySelector(".yso-subscription-list"));
+					response(!!getSubList());
 					break;
 				case "filter": {
 					await filterContent(data.titles, data.itemCount, data.nextStart);
@@ -119,9 +122,9 @@ const main = () => {
 	);
 };
 
-async function handleUpdate(flag: boolean) {
-	const subList = document.querySelector(".yso-subscription-list");
-	if (flag) {
+async function handleUpdate(isUnsubscription: boolean) {
+	const subList = getSubList();
+	if (isUnsubscription) {
 		const orderLabels = Array.from(
 			subList.getElementsByTagName("yso-order"),
 			(v: HTMLElement) => v.title,

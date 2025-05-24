@@ -5,14 +5,13 @@ import {
 	EXPAND_CLASS,
 	ATTR_NAME,
 } from "./constants";
+import { sortSubscriptions, observeContentChange } from "./utils";
 import {
-	sortSubscriptions,
 	resetStorage,
 	getAllStoredFolders,
 	getUserStoredFolders,
 	getCurrId,
-	observeContentChange,
-} from "./utils";
+} from "./storage";
 
 const active = document.createAttribute("active");
 

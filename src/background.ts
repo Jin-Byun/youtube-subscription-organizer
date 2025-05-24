@@ -3,7 +3,6 @@ import type { FlaggedMessage, FilterData } from "./constants";
 const WIDTH_LG = 1312;
 const YOUTUBE_ORIGIN = "https://www.youtube.com";
 const accessLevel = chrome.storage.AccessLevel.TRUSTED_AND_UNTRUSTED_CONTEXTS;
-const SUB_ORDER_KEY = "YSO-SUBSCRIPTION-ORDER";
 
 const getCurrentTab = async (): Promise<chrome.tabs.Tab> => {
 	const query = { active: true, lastFocusedWindow: true };
