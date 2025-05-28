@@ -8,16 +8,11 @@ const rootDir = resolve(__dirname);
 const publicDir = resolve(rootDir, "public");
 const outDir = resolve(rootDir, "dist");
 const srcDir = resolve(rootDir, "src");
-const isDev = process.env.NODE_ENV === "development";
-const isProduction = !isDev;
-
-// ENABLE HMR IN BACKGROUND SCRIPT
-const enableHmrInBackgroundScript = true;
+const isProduction = process.env.NODE_ENV !== "development";
 
 export default defineConfig({
 	plugins: [
-		makeManifest(manifest, publicDir, outDir, {
-			isDev,
+		makeManifest(manifest, outDir, {
 			contentScriptCssKey: regenerateCacheInvalidationKey(),
 		}),
 		watchRebuild(),
@@ -35,9 +30,7 @@ export default defineConfig({
 			},
 			output: {
 				entryFileNames: "src/[name]/index.js",
-				chunkFileNames: isDev
-					? "assets/js/[name].js"
-					: "assets/js/[name].[hash].js",
+				chunkFileNames: "assets/js/[name].[hash].js",
 				assetFileNames: (assetInfo) => {
 					const { dir, name: _name } = path.parse(assetInfo.name);
 					const assetFolder = dir.split("/").at(-1);
