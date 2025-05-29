@@ -11,7 +11,7 @@
     "url": "https://github.com/Jin-Byun/youtube-subscription-organizer"
   },
   "scripts": {
-    "dev": "vite build --watch --mode development",
+    "dev": "cross-env NODE_ENV=development vite build --watch",
     "build": "tsc --noEmit && vite build"
   },
   "keywords": [
@@ -25,6 +25,7 @@
     "@types/node": "^22.15.3",
     "@types/ws": "^8.18.1",
     "concurrently": "^9.1.2",
+    "cross-env": "^7.0.3",
     "rollup": "^4.40.1",
     "typescript": "^5.8.3",
     "vite": "^6.3.3",
