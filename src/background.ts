@@ -23,11 +23,6 @@ const sendYSOMessage = async <T>(
 		data,
 	});
 
-// adding redirection to youtube onclick of the extension icon
-chrome.action.onClicked.addListener((tab) => {
-	chrome.tabs.update(tab.id, { url: ORIGIN });
-});
-
 chrome.tabs.onUpdated.addListener(
 	async (
 		tabId: number,

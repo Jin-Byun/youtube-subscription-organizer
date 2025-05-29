@@ -20,6 +20,7 @@ const manifest: chrome.runtime.ManifestV3 = {
 	action: {
 		default_title: "My YT Organizer",
 		default_icon: "icon-34.png",
+		default_popup: "src/popup/index.html",
 	},
 	icons: {
 		"128": "icon-128.png",
