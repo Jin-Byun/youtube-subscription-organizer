@@ -2,14 +2,21 @@ import {
 	EXPAND_CLASS,
 	FOLDER_CLASS,
 	FOLDER_IMG_URL,
-	ATTR_NAME,
+	ADD_TO_FOLDER,
 	NUM_CHANNEL,
 	LABEL_PLACEHOLDER,
 	LABEL_NOTITLE,
-	PLACEHOLDER_ATTR,
+	DATA_PLACEHOLDER,
 	LABEL_NOCHANNEL,
 	LABEL_DUPLICATE,
+	HIDE_CLASS,
+	ORDER_TAG,
+	TRUE,
+	EDIT_MENU_CLASS,
+	NEW_BUTTION_ID,
+	CHANNEL_TAG,
 } from "./constants";
+import { getElementFromTag } from "./dom";
 import {
 	handleDelete,
 	handleEdit,
@@ -21,15 +28,14 @@ import {
 	toggleOption,
 } from "./handlers";
 import {
-	storeFolderLocal,
-	resetStorage,
+	updateUserFolder,
 	getUserStoredFolders,
 	getSubscriptionOrder,
 } from "./storage";
 
 class Component<T extends HTMLElement> {
 	element: T;
-	constructor(tag: string) {
+	constructor(tag = "div") {
 		this.element = document.createElement(tag) as T;
 	}
 
@@ -81,15 +87,15 @@ const subscriptionFolder = (title: string): HTMLDivElement => {
 	const caret = `<p class="${EXPAND_CLASS}"></p>`;
 	const img = `<img src="${FOLDER_IMG_URL}" class="${EXPAND_CLASS}">`;
 
-	return new Component<HTMLDivElement>("div")
-		.addClass(FOLDER_CLASS, "hide")
+	return new Component<HTMLDivElement>()
+		.addClass(FOLDER_CLASS, HIDE_CLASS)
 		.addAttributes({
 			title,
 		})
 		.addInnerHTML(`${img}${label}${caret}`)
 		.addEventListener("click", toggleCollapsible)
 		.addEventListener("contextmenu", toggleOption)
-		.append(deleteTab(), editTab(), cancelTab(), saveTab()).element;
+		.append(...FolderTabs()).element;
 };
 
 const displayPlaceholderMessage = (
@@ -97,9 +103,9 @@ const displayPlaceholderMessage = (
 	message: string,
 	fallback = "",
 ) => {
-	target.setAttribute(PLACEHOLDER_ATTR, message);
+	target.setAttribute(DATA_PLACEHOLDER, message);
 	setTimeout(() => {
-		target.setAttribute(PLACEHOLDER_ATTR, fallback);
+		target.setAttribute(DATA_PLACEHOLDER, fallback);
 	}, 1500);
 };
 
@@ -122,7 +128,9 @@ const SaveButton = (subList: Element): HTMLButtonElement =>
 				if (folders && Object.keys(folders).includes(title)) {
 					return displayPlaceholderMessage(labelDiv, LABEL_DUPLICATE);
 				}
-				const selectedSubs = subList.querySelectorAll(`[${ATTR_NAME}="true"]`);
+				const selectedSubs = subList.querySelectorAll(
+					`[${ADD_TO_FOLDER}="${TRUE}"]`,
+				);
 				if (selectedSubs.length === 0) {
 					return displayPlaceholderMessage(labelDiv, LABEL_NOCHANNEL);
 				}
@@ -133,61 +141,59 @@ const SaveButton = (subList: Element): HTMLButtonElement =>
 				subFolder.style.setProperty(NUM_CHANNEL, `${selectedSubs.length}`);
 				subFolder.append(...selectedSubs);
 
-				subList.prepend(subFolder);
-				await storeFolderLocal(selectedSubs, title);
+				const firstChannel = getElementFromTag(CHANNEL_TAG, subList);
+				if (firstChannel.closest(`.${FOLDER_CLASS}`)) {
+					firstChannel.closest(`.${FOLDER_CLASS}`).before(subFolder);
+				} else {
+					firstChannel.before(subFolder);
+				}
+				await updateUserFolder(selectedSubs, title);
 				this.parentElement.remove();
 			},
 		).element;
 
-const deleteTab = (): HTMLDivElement =>
-	new Component<HTMLDivElement>("div")
-		.addClass("delete-YSO-folder", "YSO-edit-menu")
-		.addEventListener("click", handleDelete)
-		.addInnerText("❌ Delete").element;
-const editTab = (): HTMLDivElement =>
-	new Component<HTMLDivElement>("div")
-		.addClass("edit-YSO-folder", "YSO-edit-menu")
-		.addEventListener("click", handleEdit)
-		.addInnerText("✂ Edit").element;
-const saveTab = (): HTMLDivElement =>
-	new Component<HTMLDivElement>("div")
-		.addClass("save-YSO-folder", "YSO-edit-menu")
-		.addEventListener("click", handleSave)
-		.addInnerText("💾 Save").element;
-const cancelTab = (): HTMLDivElement =>
-	new Component<HTMLDivElement>("div")
-		.addClass("cancel-YSO-folder", "YSO-edit-menu")
-		.addEventListener("click", handleCancel)
-		.addInnerText("↻ Cancel").element;
+const tabTypeList: string[] = ["Delete", "Edit", "Cancel", "Save"] as const;
+const tabSymbolList: string[] = ["❌", "✂", "↻", "💾"] as const;
+const tabListenerList: EventListener[] = [
+	handleDelete,
+	handleEdit,
+	handleCancel,
+	handleSave,
+] as const;
+const FolderTabs = (): HTMLDivElement[] =>
+	tabTypeList.map(
+		(tab, i) =>
+			new Component<HTMLDivElement>()
+				.addClass(`${tab.toLowerCase()}-YSO-folder`, EDIT_MENU_CLASS)
+				.addInnerText(`${tabSymbolList[i]} ${tab}`)
+				.addEventListener("click", tabListenerList[i]).element,
+	);
 
 function removePlaceholder(this: HTMLDivElement) {
-	this.removeAttribute(PLACEHOLDER_ATTR);
-	this.removeEventListener("focus", removePlaceholder);
+	this.removeAttribute(DATA_PLACEHOLDER);
 }
 
 export const createNewFolderButton = (list: Element): HTMLButtonElement =>
 	new Component<HTMLButtonElement>("button")
-		.setId("create-new-folder-button")
+		.setId(NEW_BUTTION_ID)
 		.addInnerText("+")
 		.addEventListener("click", () => {
 			activateToggleChannel(list.children);
 			list.prepend(
-				new Component<HTMLDivElement>("div")
-					.addClass(FOLDER_CLASS, "new")
-					.append(
-						new Component<HTMLDivElement>("div")
-							.addAttributes({
-								[PLACEHOLDER_ATTR]: LABEL_PLACEHOLDER,
-								contenteditable: "",
-							})
-							.addEventListener("focus", removePlaceholder).element,
-						SaveButton(list),
-					).element,
+				new Component<HTMLDivElement>().addClass(FOLDER_CLASS, "new").append(
+					new Component<HTMLDivElement>()
+						.addAttributes({
+							[DATA_PLACEHOLDER]: LABEL_PLACEHOLDER,
+							contenteditable: "",
+						})
+						.addEventListener("focus", removePlaceholder).element,
+					SaveButton(list),
+				).element,
 			);
 		}).element;
 
 export const channelOrderLabels = (title: string): HTMLElement =>
-	new Component<HTMLElement>("yso-order").addAttributes({ title }).element;
+	new Component<HTMLElement>(ORDER_TAG).addAttributes({ title }).element;
 
 export async function prependExtensionItems(list: Element) {
 	const folders = await getUserStoredFolders();
@@ -204,8 +210,6 @@ export async function prependExtensionItems(list: Element) {
 			);
 			list.prepend(folder);
 		}
-	} else {
-		await resetStorage();
 	}
 	const channelOrder = await getSubscriptionOrder();
 	const divLabels: HTMLElement[] = channelOrder.map(channelOrderLabels);

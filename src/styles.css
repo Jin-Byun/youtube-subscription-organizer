@@ -116,10 +116,10 @@
   }
 }
 
-ytd-guide-entry-renderer[newFolderAdd] {
+ytd-guide-entry-renderer[add-to-folder] {
   outline: 1px dashed rgb(0, 0, 0, 0.2);
 }
-ytd-guide-entry-renderer[newFolderAdd="true"] {
+ytd-guide-entry-renderer[add-to-folder="true"] {
   background-color: rgb(255, 50, 50, 0.2) !important;
 }
 
@@ -184,7 +184,7 @@ ytd-guide-entry-renderer[newFolderAdd="true"] {
     hidden from view unless specified
 */
 
-.yso-filter > *:not(.yso-filter, ytd-continuation-item-renderer) {
+#contents.yso-filter > *:not(.yso-filter, ytd-continuation-item-renderer) {
   display: none;
 }
 
