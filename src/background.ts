@@ -1,5 +1,6 @@
 import type { YSOMessage, FilterData, MessageType } from "./constants";
 
+export const connectedToBackground = "hello from background";
 const WIDTH_LG = 1312;
 const ORIGIN = "https://www.youtube.com";
 const SUB_PATH = "youtubei/v1/subscription/*";
@@ -42,11 +43,31 @@ chrome.tabs.onUpdated.addListener(
 	},
 );
 
-chrome.runtime.onMessage.addListener(async ({ msg }) => {
-	const { filter }: { filter: FilterData | null } =
-		await chrome.storage.session.get("filter");
-	if (!filter) return;
-	sendYSOMessage(msg, true, filter).catch((e) => console.log(e));
+chrome.runtime.onMessage.addListener(async ({ msg }, _sender, sendResponse) => {
+	switch (msg) {
+		case "filter": {
+			const { filter }: { filter: FilterData | null } =
+				await chrome.storage.session.get("filter");
+			if (!filter) return;
+			sendYSOMessage(msg, true, filter).catch((e) => console.log(e));
+			break;
+		}
+		case "getUsers": {
+			chrome.storage.sync.getKeys((keys) => {
+				console.log(keys);
+				sendResponse({ data: keys });
+			});
+			// await chrome.storage.sync.clear();
+			return true;
+		}
+		case "reset": {
+			const syncData = await chrome.storage.sync.get(null);
+			console.log(syncData);
+			// await chrome.storage.sync.clear();
+			sendResponse({ success: true });
+		}
+	}
+	return true;
 });
 
 chrome.webRequest.onCompleted.addListener(
