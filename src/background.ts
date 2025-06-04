@@ -43,28 +43,26 @@ chrome.tabs.onUpdated.addListener(
 	},
 );
 
-chrome.runtime.onMessage.addListener(async ({ msg }, _sender, sendResponse) => {
+chrome.runtime.onMessage.addListener(({ msg }, _sender, sendResponse) => {
 	switch (msg) {
 		case "filter": {
-			const { filter }: { filter: FilterData | null } =
-				await chrome.storage.session.get("filter");
-			if (!filter) return;
-			sendYSOMessage(msg, true, filter).catch((e) => console.log(e));
+			chrome.storage.session.get("filter", ({ filter }) => {
+				if (!filter) return;
+				sendYSOMessage(msg, true, filter).catch((e) => console.log(e));
+			});
 			break;
 		}
 		case "getUsers": {
-			chrome.storage.sync.getKeys((keys) => {
-				console.log(keys);
-				sendResponse({ data: keys });
+			chrome.storage.sync.get(null, (data) => {
+				sendResponse({ data });
 			});
-			// await chrome.storage.sync.clear();
 			return true;
 		}
 		case "reset": {
-			const syncData = await chrome.storage.sync.get(null);
-			console.log(syncData);
+			chrome.storage.sync.get(null, (data) => {
+				sendResponse({ success: true, ...data });
+			});
 			// await chrome.storage.sync.clear();
-			sendResponse({ success: true });
 		}
 	}
 	return true;

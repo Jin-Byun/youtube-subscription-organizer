@@ -1,4 +1,4 @@
-export type Style = { [key: string]: string };
+export type Style = { [key: string]: string | Style };
 
 // Create a deep copy of the first style and merge,
 // giving priority to the latter styles
@@ -18,7 +18,7 @@ export const initialStyle: Style = {
 
 export const popupContainer = {
 	width: "14rem",
-	maxHeight: "24rem",
+	maxHeight: "30rem",
 	height: "fit-content",
 };
 

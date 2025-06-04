@@ -3,9 +3,8 @@ import React, {
 	useEffect,
 	useContext,
 	useMemo,
-	type MouseEventHandler,
 	type MouseEvent as ReactMouseEvent,
-	type FocusEvent as ReactFocusEvent,
+	type RefObject,
 } from "react";
 import {
 	ms,
@@ -13,22 +12,29 @@ import {
 	popupContainer,
 	setBackgroundColor,
 	type Style,
-	buttonDefault,
 	flexCol,
 	flexRow,
 } from "./styles";
 import { DarkModeContext } from "./darkModeContext";
+import { ActionButton } from "./components/actionButton";
+import {
+	Explorer,
+	ExplorerContainer,
+	type FolderData,
+} from "./components/explorer";
+
 const imageURL = chrome.runtime.getURL("icon-64.png");
 
-const Container = (): JSX.Element => {
+const Container = ({
+	contextMenuRef,
+}: { contextMenuRef: RefObject<HTMLDivElement> }): JSX.Element => {
 	const { isDarkMode } = useContext(DarkModeContext);
 	const startingStyle: Style = useMemo(() => {
 		return ms(flexCol, initialStyle, setBackgroundColor(isDarkMode));
 	}, [isDarkMode]);
 
 	const [style, setStyle] = useState<Style>(startingStyle);
-	const [users, setUsers] = useState<string[]>([]);
-	// todo: fix here.
+	const [folders, setFolders] = useState<FolderData>(null);
 	useEffect(() => {
 		let ignore = false;
 		chrome.runtime
@@ -36,16 +42,15 @@ const Container = (): JSX.Element => {
 				msg: "getUsers",
 			})
 			.then((res) => {
-				console.log(ignore, res, "outside ignorecatch");
-				// if (!ignore && data) {
-				// 	console.log(data, "inside ignore catch");
-				// 	setUsers(data);
-				// }
+				if (!ignore && res) {
+					setFolders(res.data);
+				}
 			});
 		return () => {
 			ignore = true;
 		};
 	}, []);
+
 	useEffect(() => {
 		requestAnimationFrame(() => {
 			setStyle(ms(startingStyle, popupContainer));
@@ -70,16 +75,23 @@ const Container = (): JSX.Element => {
 					</span>
 				</h2>
 			</div>
+			{/** Folder containing div */}
+			<ExplorerContainer>
+				{folders &&
+					Object.entries(folders).map(([key, value]) => (
+						<Explorer
+							key={key}
+							data={value}
+							title={key}
+							contextMenuRef={contextMenuRef}
+						/>
+					))}
+			</ExplorerContainer>
 			<div
 				style={ms(flexCol, {
 					width: "100%",
 				})}
 			>
-				<div>
-					{users?.map((user) => (
-						<span key={user}>{user}</span>
-					))}
-				</div>
 				<h2>Redirect To:</h2>
 				<div
 					style={ms(flexRow, {
@@ -185,56 +197,6 @@ const RedirectButton = ({
 	<ActionButton handleClick={redirectTo} url={url} text={text} />
 );
 
-const ActionButton = ({
-	handleClick,
-	text,
-	url,
-	style,
-	isAlert,
-}: {
-	handleClick: MouseEventHandler<HTMLButtonElement>;
-	text: string;
-	url?: string;
-	style?: Style;
-	isAlert?: boolean;
-}): JSX.Element => {
-	const { isDarkMode } = useContext(DarkModeContext);
-	const buttonStyle = style
-		? ms(buttonDefault(isDarkMode), style)
-		: buttonDefault(isDarkMode);
-
-	const turnFocus = (e: ReactMouseEvent | ReactFocusEvent) => {
-		const thisButton = e.target as HTMLButtonElement;
-		if (!isAlert) {
-			thisButton.style.backgroundColor = isDarkMode ? "#3A0000" : "#FF8080";
-			thisButton.style.color = buttonStyle.color;
-			return;
-		}
-		thisButton.style.backgroundColor = isDarkMode ? "#FF3030" : "#AA0000";
-		thisButton.style.color = isDarkMode ? "#000000" : "#FFFFFF";
-	};
-	const turnDefault = (e: ReactMouseEvent | ReactFocusEvent) => {
-		const thisButton = e.target as HTMLButtonElement;
-		thisButton.style.backgroundColor = buttonStyle.backgroundColor;
-		thisButton.style.color = buttonStyle.color;
-	};
-
-	return (
-		<button
-			type="button"
-			data-url={url}
-			style={buttonStyle}
-			onClick={handleClick}
-			onFocus={turnFocus}
-			onBlur={turnDefault}
-			onMouseOver={turnFocus}
-			onMouseOut={turnDefault}
-		>
-			{text}
-		</button>
-	);
-};
-
 function redirectTo(e: ReactMouseEvent) {
 	const thisButton = e.target as HTMLButtonElement;
 	const url = thisButton.getAttribute("data-url");
@@ -254,11 +216,6 @@ function resetStorage() {
 			console.log(data, "in resetstorage");
 		},
 	);
-	// chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-	// 	if (tabs.length === 0) return;
-	// 	const currentTab = tabs[0];
-	// 	if (!currentTab.url.startsWith("https://www.youtube.com")) return;
-	// });
 }
 
 export default Container;

@@ -11,6 +11,7 @@ export const MessageTypeList: string[] = [
 	"filter",
 	"rowChange",
 	"reset",
+	"getUsers",
 ] as const;
 
 export type MessageType = (typeof MessageTypeList)[number];
@@ -82,7 +83,7 @@ export const SUBSCRIPTION_TAB_LABEL =
 	'ytd-mini-guide-entry-renderer[aria-label="Subscriptions"]';
 
 /** URLs */
-export const FOLDER_IMG_URL = chrome.runtime.getURL("Icon_folder_2019_1.svg");
+export const FOLDER_IMG_URL = chrome.runtime.getURL("folder.svg");
 export const YOUTUBE_SUBSCRIPTION_PATH = "/feed/subscriptions";
 
 /** MESSAGES */

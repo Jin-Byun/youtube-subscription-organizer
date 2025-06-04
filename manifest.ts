@@ -39,7 +39,7 @@ const manifest: chrome.runtime.ManifestV3 = {
 				"assets/css/*.css",
 				"icon-128.png",
 				"icon-34.png",
-				"Icon_folder_2019_1.svg",
+				"folder.svg",
 			],
 			matches: ["*://*/*"],
 		},
