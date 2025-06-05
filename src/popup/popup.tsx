@@ -57,7 +57,24 @@ const Container = ({
 		});
 	}, [startingStyle]);
 	return (
-		<div style={style} id="popup-container">
+		// biome-ignore lint/a11y/useKeyWithClickEvents: <explanation>
+		<div
+			style={style}
+			id="popup-container"
+			onClick={(e: ReactMouseEvent) => {
+				const el = e.target as HTMLElement;
+				if (!el.closest("#contextMenu")) {
+					e.preventDefault();
+					const menu = contextMenuRef.current;
+					menu.title = "";
+					menu.removeAttribute("data-target");
+					menu.removeAttribute("data-parent");
+					menu.style.display = "none";
+					menu.style.top = "0px";
+					menu.style.left = "0px";
+				}
+			}}
+		>
 			<div
 				style={ms(flexRow, {
 					width: "100%",
@@ -75,7 +92,6 @@ const Container = ({
 					</span>
 				</h2>
 			</div>
-			{/** Folder containing div */}
 			<ExplorerContainer>
 				{folders &&
 					Object.entries(folders).map(([key, value]) => (
@@ -83,6 +99,7 @@ const Container = ({
 							key={key}
 							data={value}
 							title={key}
+							parent={key}
 							contextMenuRef={contextMenuRef}
 						/>
 					))}

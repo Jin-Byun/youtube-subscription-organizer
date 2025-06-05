@@ -9,15 +9,18 @@ import { ms, flexCol, flexRow, type Style } from "../styles";
 import { DarkModeContext } from "../darkModeContext";
 import { OpenChevron, ClosedChevron } from "./chevron";
 
-const handleContextMenu = (e: ReactMouseEvent) => {};
+const explorerDisplayTitle = (title: string): string =>
+	title.startsWith("YSO-KEY_") ? title.slice(8) : title;
 
 export const Explorer = ({
 	data,
 	title,
+	parent,
 	contextMenuRef,
 }: {
 	data: FolderData | string[];
 	title: string;
+	parent: string;
 	contextMenuRef: RefObject<HTMLDivElement>;
 }): JSX.Element => {
 	const { isDarkMode } = useContext(DarkModeContext);
@@ -26,6 +29,7 @@ export const Explorer = ({
 	return (
 		<div
 			id={title}
+			data-parent={parent}
 			className="folder"
 			style={ms(flexCol, {
 				width: "100%",
@@ -46,15 +50,28 @@ export const Explorer = ({
 				onContextMenu={(e: ReactMouseEvent) => {
 					e.preventDefault();
 					const { target, clientX: x, clientY: y } = e;
-					const folder = (target as HTMLElement).closest(".folder");
-					console.log(folder.id, x, y);
-					contextMenuRef.current.style.left = `${x}px`;
-					contextMenuRef.current.style.top = `${y}px`;
-					contextMenuRef.current.style.display = "flex";
+					const folder = (target as HTMLElement).closest(
+						".folder",
+					) as HTMLElement;
+					const folderId = folder.id;
+					const folderParent = folder.getAttribute("data-parent");
+					const menu = contextMenuRef.current;
+					menu.removeAttribute("data-parent");
+					menu.setAttribute("data-target", folder.id);
+					if (folderId !== folderParent) {
+						menu.setAttribute(
+							"data-parent",
+							folder.getAttribute("data-parent"),
+						);
+					}
+					menu.title = `For ${folder.id}`;
+					menu.style.left = `${x}px`;
+					menu.style.top = `${y}px`;
+					menu.style.display = "flex";
 				}}
 			>
 				<ChevronFolder isOpen={isOpen} isDarkMode={isDarkMode} />
-				<p>{title}</p>
+				<p>{explorerDisplayTitle(title)}</p>
 			</div>
 			{isFolderData(data) &&
 				Object.entries(data).map(
@@ -62,6 +79,7 @@ export const Explorer = ({
 						<Explorer
 							key={key}
 							title={key}
+							parent={parent}
 							data={value}
 							contextMenuRef={contextMenuRef}
 						/>
@@ -100,6 +118,7 @@ export const Explorer = ({
 								overflow: "hidden",
 								whiteSpace: "nowrap",
 								textOverflow: "ellipsis",
+								transition: "font-weight 0.2s",
 							}}
 							onMouseOver={(e: ReactMouseEvent) => {
 								const thisLine = e.target as HTMLParagraphElement;
@@ -132,7 +151,7 @@ export const ExplorerContainer = ({
 				gap: "0rem",
 				backgroundColor: isDarkMode ? "#000" : "#FFF",
 				paddingBottom: isOpen ? "0.5rem" : "0.25rem",
-				maxHeight: isOpen ? "15rem" : "1.5rem",
+				maxHeight: isOpen ? "12rem" : "1.5rem",
 				overflow: isOpen ? "auto" : "clip",
 				scrollbarWidth: "thin",
 				scrollbarColor: "#ABABAB transparent",
