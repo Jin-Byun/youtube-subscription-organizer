@@ -38,7 +38,7 @@ chrome.tabs.onUpdated.addListener(
 		chrome.storage.session.clear();
 		chrome.storage.session.setAccessLevel({ accessLevel });
 		sendYSOMessage("initialize", tab.width > WIDTH_LG).catch((e) =>
-			console.log(e),
+			console.error(e),
 		);
 	},
 );
@@ -49,7 +49,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 		case "filter": {
 			chrome.storage.session.get("filter", ({ filter }) => {
 				if (!filter) return;
-				sendYSOMessage(msg, true, filter).catch((e) => console.log(e));
+				sendYSOMessage(msg, true, filter).catch((e) => console.error(e));
 			});
 			break;
 		}

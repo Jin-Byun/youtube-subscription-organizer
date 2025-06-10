@@ -271,7 +271,12 @@ export async function toggleCollapsible(this: HTMLDivElement, e: MouseEvent) {
 				folder.classList.add(HIDE_CLASS);
 			}
 			const folders = await getUserStoredFolders();
-			await filterContent(folders[this.title], 0, 1, this.title);
+			await filterContent(
+				folders[this.title].map(({ title }) => title),
+				0,
+				1,
+				this.title,
+			);
 		} else {
 			unfilterContent();
 		}

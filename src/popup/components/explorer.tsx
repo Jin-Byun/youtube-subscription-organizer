@@ -12,13 +12,18 @@ import { OpenChevron, ClosedChevron } from "./chevron";
 const explorerDisplayTitle = (title: string): string =>
 	title.startsWith("YSO-KEY_") ? title.slice(8) : title;
 
+type Channel = {
+	title: string;
+	channelPath: string;
+};
+
 export const Explorer = ({
 	data,
 	title,
 	parent,
 	contextMenuRef,
 }: {
-	data: FolderData | string[];
+	data: FolderData | Channel[];
 	title: string;
 	parent: string;
 	contextMenuRef: RefObject<HTMLDivElement>;
@@ -68,7 +73,7 @@ export const Explorer = ({
 			</div>
 			{isFolderData(data) &&
 				Object.entries(data).map(
-					([key, value]: [string, FolderData | string[]]) => (
+					([key, value]: [string, FolderData | Channel[]]) => (
 						<Explorer
 							key={key}
 							title={key}
@@ -79,13 +84,24 @@ export const Explorer = ({
 					),
 				)}
 			{Array.isArray(data) &&
-				data.map((channels, i) => (
+				data.map(({ title, channelPath }, i) => (
+					// biome-ignore lint/a11y/useKeyWithClickEvents: <explanation>
 					<div
-						key={channels}
+						key={channelPath}
 						title="Click to navigate to Channel"
 						style={ms(flexRow, channelTitleStyle, {
 							margin: `${!i ? 0.25 : 0.5}rem 0 0 0.5rem`,
 						})}
+						onClick={() => {
+							const url = `https://www.youtube.com/feed/subscriptions/UC${channelPath}`;
+							chrome.tabs.query(
+								{ active: true, currentWindow: true },
+								([tab]) => {
+									if (tab?.url === url) return;
+									chrome.tabs.update(tab.id, { url });
+								},
+							);
+						}}
 					>
 						<svg
 							xmlns="http://www.w3.org/2000/svg"
@@ -104,7 +120,6 @@ export const Explorer = ({
 							/>
 						</svg>
 						<p
-							key={channels}
 							style={{
 								width: "calc(100% - 1.5rem)",
 								overflow: "hidden",
@@ -121,7 +136,7 @@ export const Explorer = ({
 								thisLine.style.fontWeight = "normal";
 							}}
 						>
-							{channels}
+							{title}
 						</p>
 					</div>
 				))}
@@ -256,10 +271,10 @@ const channelTitleStyle: Style = {
 };
 
 export type FolderData = {
-	[keys: string]: string[] | FolderData;
+	[keys: string]: Channel[] | FolderData;
 };
 const isFolderData = (
-	data: string[] | FolderData | undefined,
+	data: Channel[] | FolderData | undefined,
 ): data is FolderData => data && !Array.isArray(data);
 
 const closedFolderURL = chrome.runtime.getURL("folder.svg");

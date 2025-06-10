@@ -86,6 +86,8 @@ export const SUBSCRIPTION_TAB_LABEL =
 /** URLs */
 export const FOLDER_IMG_URL = chrome.runtime.getURL("folder.svg");
 export const YOUTUBE_SUBSCRIPTION_PATH = "/feed/subscriptions";
+export const YOUTUBE_CHANNEL_PATH = "/UC";
+export const YOUTUBE_ORIGIN = "https://www.youtube.com";
 
 /** MESSAGES */
 export const LABEL_PLACEHOLDER = "Right click adds channel";

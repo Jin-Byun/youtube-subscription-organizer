@@ -6,8 +6,13 @@ import {
 	OBSERVER_KEY,
 } from "./constants";
 
+type Channel = {
+	title: string;
+	channelPath: string;
+};
+
 type FolderData = {
-	[folderName: string]: string[];
+	[folderName: string]: Channel[];
 };
 const UserStorageId = async () => `${STORAGE_KEY}_${await getCurrId()}`;
 
@@ -46,11 +51,25 @@ const sessionSetter = <T>(key: string, value: T): Promise<void> =>
 const syncSetter = <T>(key: string, value: T): Promise<void> =>
 	chrome.storage.sync.set({ [key]: value });
 
-const extractTitlesFromNodeList = (
+const extractChannelPath = (url: string): string => url.slice(45);
+
+const extractChannelsFromNodeList = (
+	list: NodeListOf<Element> | HTMLCollection,
+): Channel[] =>
+	Array.from(list).flatMap((el) => {
+		const anchor = el.firstElementChild as HTMLAnchorElement;
+		if (!anchor?.title) return [];
+		return {
+			title: anchor.title,
+			channelPath: extractChannelPath(anchor.href),
+		};
+	});
+
+const extractTItlesFromNodeList = (
 	list: NodeListOf<Element> | HTMLCollection,
 ): string[] =>
 	Array.from(list).flatMap(
-		(el) => (el.firstElementChild as HTMLAnchorElement).title ?? [],
+		(el) => (el.firstElementChild as HTMLAnchorElement)?.title ?? [],
 	);
 /** Helper End */
 
@@ -62,7 +81,7 @@ export const setSubscriptionOrder = (
 ): Promise<void> => {
 	return sessionSetter(
 		SUB_ORDER_KEY,
-		Array.isArray(list) ? list : extractTitlesFromNodeList(list.children),
+		Array.isArray(list) ? list : extractTItlesFromNodeList(list.children),
 	);
 };
 
@@ -91,7 +110,7 @@ export const updateUserFolder = async (
 ) =>
 	setUserFolder({
 		...(await getUserStoredFolders()),
-		[title]: extractTitlesFromNodeList(selected),
+		[title]: extractChannelsFromNodeList(selected),
 	});
 
 export async function deleteFolder(title: string) {
@@ -106,7 +125,7 @@ export async function deleteChannelFromFolder(
 ) {
 	const allFolders = await getUserStoredFolders();
 	allFolders[folderTitle] = allFolders[folderTitle].filter(
-		(title: string) => title !== removedTitle,
+		(channel: Channel) => channel.title !== removedTitle,
 	);
 	await setUserFolder(allFolders);
 }

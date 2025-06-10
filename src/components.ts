@@ -195,6 +195,7 @@ export const createNewFolderButton = (list: Element): HTMLButtonElement =>
 export const channelOrderLabels = (title: string): HTMLElement =>
 	new Component<HTMLElement>(ORDER_TAG).addAttributes({ title }).element;
 
+// todo: channel data will have structure: {title: string, channelPath: path following youtube/feed/subscriptions/UC{url}}
 export async function prependExtensionItems(list: Element) {
 	const folders = await getUserStoredFolders();
 	if (folders) {
@@ -205,7 +206,7 @@ export async function prependExtensionItems(list: Element) {
 			folder.append(
 				...nodes.filter((node: Element) => {
 					const a = node.firstElementChild as HTMLAnchorElement;
-					return channels.includes(a.title);
+					return channels.some((ch) => ch.title === a.title);
 				}),
 			);
 			list.prepend(folder);
