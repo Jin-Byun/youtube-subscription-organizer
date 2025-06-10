@@ -23,8 +23,9 @@ I have few hobbies/interests. They include programming(Go, Rust, JS/TS, Elixir, 
 - [x] Check the user Id to make sure that the directory is created per id
 - [x] Set up chrome-storage api for sync
 - [x] Filtering logic for each folder when on subscription page.
-- [ ] Make extension popup for function toggles and proper logo
-- [ ] More
+- [x] Make extension popup for function toggles and proper logo
+- [ ] Update storage logic for more feature.
+- [ ] Handle list view of subscription page.
 
 ## How to use it
 

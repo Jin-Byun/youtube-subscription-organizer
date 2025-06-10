@@ -2,14 +2,12 @@ import { defineConfig } from "vite";
 import path, { resolve } from "node:path";
 import manifest from "./manifest";
 import makeManifest from "./utils/plugins/make-manifest";
-import watchRebuild from "./utils/plugins/watch-rebuild";
 import react from "@vitejs/plugin-react";
 
 const rootDir = resolve(__dirname);
 const publicDir = resolve(rootDir, "public");
 const outDir = resolve(rootDir, "dist");
 const srcDir = resolve(rootDir, "src");
-console.log(process.env.NODE_ENV);
 const isProduction = process.env.NODE_ENV !== "development";
 
 export default defineConfig({
@@ -18,7 +16,6 @@ export default defineConfig({
 		makeManifest(manifest, outDir, {
 			contentScriptCssKey: regenerateCacheInvalidationKey(),
 		}),
-		watchRebuild(),
 	],
 	publicDir,
 	build: {
