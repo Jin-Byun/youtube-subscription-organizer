@@ -1,6 +1,7 @@
 import React from "react";
 
 export const OpenChevron = () => (
+	// biome-ignore lint/a11y/noSvgWithoutTitle: <explanation>
 	<svg
 		xmlns="http://www.w3.org/2000/svg"
 		fill="none"
@@ -10,7 +11,6 @@ export const OpenChevron = () => (
 		height={12}
 		stroke="currentColor"
 	>
-		<title>Open Chevron</title>
 		<path
 			strokeLinecap="round"
 			strokeLinejoin="round"
@@ -20,6 +20,7 @@ export const OpenChevron = () => (
 );
 
 export const ClosedChevron = () => (
+	// biome-ignore lint/a11y/noSvgWithoutTitle: <explanation>
 	<svg
 		xmlns="http://www.w3.org/2000/svg"
 		fill="none"
@@ -29,7 +30,6 @@ export const ClosedChevron = () => (
 		height={12}
 		stroke="currentColor"
 	>
-		<title>Closed Chevron</title>
 		<path
 			strokeLinecap="round"
 			strokeLinejoin="round"

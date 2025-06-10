@@ -43,7 +43,8 @@ chrome.tabs.onUpdated.addListener(
 	},
 );
 
-chrome.runtime.onMessage.addListener(({ msg }, _sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+	const { msg } = message;
 	switch (msg) {
 		case "filter": {
 			chrome.storage.session.get("filter", ({ filter }) => {
@@ -52,17 +53,36 @@ chrome.runtime.onMessage.addListener(({ msg }, _sender, sendResponse) => {
 			});
 			break;
 		}
-		case "getUsers": {
+		case "getAllFolders": {
 			chrome.storage.sync.get(null, (data) => {
 				sendResponse({ data });
 			});
-			return true;
+			break;
 		}
 		case "reset": {
-			chrome.storage.sync.get(null, (data) => {
-				sendResponse({ success: true, ...data });
-			});
-			// await chrome.storage.sync.clear();
+			chrome.storage.sync
+				.clear()
+				.then(() => sendResponse({ success: true }))
+				.catch((e) => {
+					sendResponse({ success: false, msg: e });
+				});
+			break;
+		}
+		case "remove": {
+			const { target, parent } = message;
+			if (target === parent) {
+				chrome.storage.sync.remove(target, () => {
+					sendResponse({ success: true });
+				});
+			} else {
+				chrome.storage.sync.get(parent, (data) => {
+					const folder = data[parent];
+					delete folder[target];
+					chrome.storage.sync.set({ [parent]: folder }, () => {
+						sendResponse({ success: true });
+					});
+				});
+			}
 		}
 	}
 	return true;

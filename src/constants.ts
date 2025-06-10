@@ -10,8 +10,9 @@ export const MessageTypeList: string[] = [
 	"update",
 	"filter",
 	"rowChange",
+	"getAllFolders",
+	"remove",
 	"reset",
-	"getUsers",
 ] as const;
 
 export type MessageType = (typeof MessageTypeList)[number];

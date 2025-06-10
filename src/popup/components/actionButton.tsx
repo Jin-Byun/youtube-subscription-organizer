@@ -47,10 +47,8 @@ export const ActionButton = ({
 			data-url={url}
 			style={buttonStyle}
 			onClick={handleClick}
-			onFocus={turnFocus}
-			onBlur={turnDefault}
-			onMouseOver={turnFocus}
-			onMouseOut={turnDefault}
+			onMouseEnter={turnFocus}
+			onMouseLeave={turnDefault}
 		>
 			{text}
 		</button>

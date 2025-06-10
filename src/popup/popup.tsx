@@ -35,11 +35,28 @@ const Container = ({
 
 	const [style, setStyle] = useState<Style>(startingStyle);
 	const [folders, setFolders] = useState<FolderData>(null);
+
+	const resetStorage = () => {
+		chrome.runtime.sendMessage(
+			{
+				msg: "reset",
+			},
+			(res) => {
+				if (res.success) {
+					setFolders(null);
+				} else {
+					console.error(res.msg);
+					alert("failed to clear data. check console.");
+				}
+			},
+		);
+	};
+
 	useEffect(() => {
 		let ignore = false;
 		chrome.runtime
 			.sendMessage({
-				msg: "getUsers",
+				msg: "getAllFolders",
 			})
 			.then((res) => {
 				if (!ignore && res) {
@@ -109,7 +126,7 @@ const Container = ({
 					width: "100%",
 				})}
 			>
-				<h2>Redirect To:</h2>
+				<h3>Redirect To:</h3>
 				<div
 					style={ms(flexRow, {
 						justifyContent: "space-around",
@@ -127,14 +144,16 @@ const Container = ({
 					width: "100%",
 				})}
 			>
-				<h2>Quick Action</h2>
-				<ResetAction />
+				<h3>Quick Action</h3>
+				<ResetAction handleReset={resetStorage} />
 			</div>
 		</div>
 	);
 };
 
-const ResetAction = (): JSX.Element => {
+const ResetAction = ({
+	handleReset,
+}: { handleReset: () => void }): JSX.Element => {
 	const [resetStage, setResetState] = useState<boolean>(false);
 	const [expandInstruction, setExpandInstruction] = useState<boolean>(false);
 	const { isDarkMode } = useContext(DarkModeContext);
@@ -190,7 +209,13 @@ const ResetAction = (): JSX.Element => {
 						backgroundColor: isDarkMode ? "#3A0000" : "#F00000",
 						color: isDarkMode ? "#FFFFFF" : "#000000",
 					}}
-					handleClick={resetStorage}
+					handleClick={() => {
+						handleReset();
+						setExpandInstruction(false);
+						setTimeout(() => {
+							setResetState(false);
+						}, 600);
+					}}
 					isAlert
 				/>
 			</div>
@@ -221,18 +246,6 @@ function redirectTo(e: ReactMouseEvent) {
 		if (tab?.url === url) return;
 		chrome.tabs.update(tab.id, { url });
 	});
-}
-
-function resetStorage() {
-	console.log("here in resetstronga");
-	chrome.runtime.sendMessage(
-		{
-			msg: "reset",
-		},
-		(data) => {
-			console.log(data, "in resetstorage");
-		},
-	);
 }
 
 export default Container;

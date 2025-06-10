@@ -53,17 +53,10 @@ export const Explorer = ({
 					const folder = (target as HTMLElement).closest(
 						".folder",
 					) as HTMLElement;
-					const folderId = folder.id;
-					const folderParent = folder.getAttribute("data-parent");
 					const menu = contextMenuRef.current;
 					menu.removeAttribute("data-parent");
 					menu.setAttribute("data-target", folder.id);
-					if (folderId !== folderParent) {
-						menu.setAttribute(
-							"data-parent",
-							folder.getAttribute("data-parent"),
-						);
-					}
+					menu.setAttribute("data-parent", folder.getAttribute("data-parent"));
 					menu.title = `For ${folder.id}`;
 					menu.style.left = `${x}px`;
 					menu.style.top = `${y}px`;
@@ -110,7 +103,6 @@ export const Explorer = ({
 								d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z"
 							/>
 						</svg>
-						{/* biome-ignore lint/a11y/useKeyWithMouseEvents: no need for it */}
 						<p
 							key={channels}
 							style={{
@@ -120,11 +112,11 @@ export const Explorer = ({
 								textOverflow: "ellipsis",
 								transition: "font-weight 0.2s",
 							}}
-							onMouseOver={(e: ReactMouseEvent) => {
+							onMouseEnter={(e: ReactMouseEvent) => {
 								const thisLine = e.target as HTMLParagraphElement;
 								thisLine.style.fontWeight = "bold";
 							}}
-							onMouseOut={(e: ReactMouseEvent) => {
+							onMouseLeave={(e: ReactMouseEvent) => {
 								const thisLine = e.target as HTMLParagraphElement;
 								thisLine.style.fontWeight = "normal";
 							}}
@@ -142,35 +134,116 @@ export const ExplorerContainer = ({
 }: { children: ReactNode }): JSX.Element => {
 	const { isDarkMode } = useContext(DarkModeContext);
 	const [isOpen, setIsOpen] = useState<boolean>(true);
+	const [hintVisible, setHintVisible] = useState<boolean>(true);
+	const [isHover, setHover] = useState<boolean>(false);
 
 	return (
-		<div
-			style={ms(flexCol, {
-				width: "100%",
-				padding: "0.25rem",
-				gap: "0rem",
-				backgroundColor: isDarkMode ? "#000" : "#FFF",
-				paddingBottom: isOpen ? "0.5rem" : "0.25rem",
-				maxHeight: isOpen ? "12rem" : "1.5rem",
-				overflow: isOpen ? "auto" : "clip",
-				scrollbarWidth: "thin",
-				scrollbarColor: "#ABABAB transparent",
-			})}
-		>
-			{/* biome-ignore lint/a11y/useKeyWithClickEvents: It's a div */}
-			<div
-				style={ms(flexRow, channelTitleStyle, {
-					marginBottom: "0.25rem",
-				})}
-				onClick={() => {
-					setIsOpen((prev) => !prev);
+		<>
+			<ul
+				id="expolorerHint"
+				style={{
+					width: "100%",
+					maxHeight: hintVisible ? "4rem" : "0",
+					marginLeft: "0.5rem",
+					overflow: "clip",
+					lineHeight: "1.25rem",
+					listStyleType: "none",
+					transition: "max-height 0.3s",
+					pointerEvents: "none",
 				}}
 			>
-				<ChevronFolder isOpen={isOpen} isDarkMode={isDarkMode} />
-				<p>Subscription Folders</p>
+				<li>Click on Folder to expand</li>
+				<li>Click on Channels to navigate</li>
+				<li>Right-Click to toggle edit Menu</li>
+			</ul>
+			<div
+				style={ms(flexCol, {
+					width: "100%",
+					padding: "0.5rem",
+					borderRadius: "0.25rem 0.25rem 0 0.25rem",
+					gap: "0rem",
+					backgroundColor: isDarkMode ? "#000" : "#EEE",
+					paddingBottom: isOpen ? "0.5rem" : "0.25rem",
+					maxHeight: isOpen ? "12rem" : "2rem",
+					overflow: isOpen ? "auto" : "clip",
+					scrollbarWidth: "thin",
+					scrollbarColor: "#ABABAB transparent",
+				})}
+				onMouseEnter={() => {
+					setHover(true);
+				}}
+				onMouseLeave={() => {
+					setHover(false);
+				}}
+			>
+				{/* biome-ignore lint/a11y/useKeyWithClickEvents: <explanation> */}
+				<div
+					style={{
+						position: "absolute",
+						top: "calc(100% - 9rem)",
+						right: "1rem",
+						display: "flex",
+						margin: "-0.5rem 0 0 auto",
+						alignItems: "center",
+						overflow: "clip",
+						backgroundColor: isDarkMode ? "#000" : "#EEE",
+						borderRadius: "0 0 0.25rem 0.25rem",
+						paddingInline: "0.5rem",
+						paddingBlock: isHover ? "0.5rem" : "0",
+						maxHeight: isHover ? "2rem" : "0",
+						transition: "padding 0.3s, max-height 0.3s",
+					}}
+					onMouseEnter={() => {
+						setHover(true);
+					}}
+					onMouseLeave={() => {
+						setHover(false);
+					}}
+					onClick={() => {
+						setHintVisible((prev) => !prev);
+					}}
+				>
+					{hintVisible ? "Hide" : "Show"} Hint
+					<div
+						style={{
+							width: "2rem",
+							height: "1.25rem",
+							marginLeft: "0.5rem",
+							padding: "0.1rem",
+							borderRadius: "1rem",
+							border: "1px solid black",
+							backgroundColor: hintVisible ? "#F006" : "#777",
+						}}
+					>
+						<div
+							style={{
+								position: "relative",
+								left: hintVisible ? "0.8rem" : "0",
+								width: "0.9rem",
+								height: "0.9rem",
+								borderRadius: "100%",
+								border: "1px solid black",
+								backgroundColor: isDarkMode ? "#2D2D2D" : "#FFFFFF",
+								transition: "left 0.3s",
+							}}
+						/>
+					</div>
+				</div>
+				{/* biome-ignore lint/a11y/useKeyWithClickEvents: It's a div */}
+				<div
+					style={ms(flexRow, channelTitleStyle, {
+						marginBottom: "0.25rem",
+					})}
+					onClick={() => {
+						setIsOpen((prev) => !prev);
+					}}
+				>
+					<ChevronFolder isOpen={isOpen} isDarkMode={isDarkMode} />
+					<p>Subscription Folders</p>
+				</div>
+				{children}
 			</div>
-			{children}
-		</div>
+		</>
 	);
 };
 
