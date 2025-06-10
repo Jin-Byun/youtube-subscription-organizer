@@ -13,7 +13,6 @@ import {
 	DATA_TITLE,
 	FILTER_CLASS,
 	FIRST_COLUMN,
-	SUBSCRIPTION_HEADING,
 	SAVE_ERR_DUPLICATE,
 	SAVE_ERR_NO_NAME,
 	TRUE,
@@ -198,7 +197,7 @@ export const filterContent = async (
 			setMutationObservers(observeContentChange(container, videoCards[1]));
 		}
 		videoCards[0].classList.add(FILTER_CLASS);
-		title.textContent = `${SUBSCRIPTION_HEADING} of ${folderName}`;
+		title.textContent = `${folderName}: ${title.textContent}`;
 	}
 	let itemCount = itemsFiltered;
 	let idx = start;
@@ -236,7 +235,7 @@ export const reorganizeFilter = () => {
 export const unfilterContent = () => {
 	removeFilter();
 	const { container, videoCards, title, itemsPerRow } = getFilterItems();
-	title.textContent = SUBSCRIPTION_HEADING;
+	title.textContent = title.textContent.split(" ").at(-1);
 	const contentLength = videoCards.length;
 	let idx = 0;
 	container.classList.remove(FILTER_CLASS);

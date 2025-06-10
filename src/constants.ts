@@ -94,6 +94,5 @@ export const LABEL_PLACEHOLDER = "Right click adds channel";
 export const LABEL_NOTITLE = "Please set title";
 export const LABEL_NOCHANNEL = "No channel Selected";
 export const LABEL_DUPLICATE = "Name in use";
-export const SUBSCRIPTION_HEADING = "Latest";
 export const SAVE_ERR_NO_NAME = "no name";
 export const SAVE_ERR_DUPLICATE = "duplicate";

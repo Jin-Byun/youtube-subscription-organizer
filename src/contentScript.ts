@@ -36,44 +36,68 @@ import {
 	queryableId,
 } from "./dom";
 
-const initializeNavBar = async (
+const openLeftPane = (
 	isLoaded: boolean,
 	userInfo: HTMLElement,
-): Promise<HTMLElement> => {
-	return new Promise((res, rej) => {
+): Promise<[HTMLElement, HTMLElement]> => {
+	return new Promise((res) => {
 		waitForElementLoad(NAVBAR_ID).then((navBar) => {
 			if (!isLoaded || !navBar.getAttribute(OPENED) !== null) {
 				navBar.style.display = "none"; // hide action being done
 				navBar.setAttribute(OPENED, "");
 			}
-			waitForElementLoad(
-				SUBSCRIPTION_EXPANDER,
-				(query: string) => navBar.querySelector(query),
-				navBar,
-			)
-				.then((expander) => {
-					res(expander);
-				})
-				.catch((reason) => rej(reason))
-				.finally(() => {
-					// close the side bar and re-display it
-					navBar.removeAttribute(OPENED);
-					navBar.style.removeProperty("display");
-					userInfo.style.removeProperty("display");
-				});
+			res([navBar, userInfo]);
 		});
 	});
 };
-const expandSubscription = async (expander: Element, list: HTMLElement) => {
-	const trigger: HTMLElement = getElementFromTag(
-		EXPANSION_TRIGGER_TAG,
-		expander,
-	);
-	if (trigger === null) return;
-	trigger.click();
-	const expandedItems = document.getElementById(EXPANDABLE_ID);
-	list.append(...expandedItems.children);
-	expander.remove();
+
+const checkSubscription = ([navBar, userInfo]: [
+	navBar: HTMLElement,
+	userInfo: HTMLElement,
+]): Promise<[HTMLElement, HTMLElement | null]> => {
+	return new Promise((res, rej) => {
+		waitForElementLoad("downloads-entry").then((downloadGuide) => {
+			const prevSection = downloadGuide.closest("ytd-guide-section-renderer");
+			const maybeSubSection = prevSection.nextElementSibling;
+			const maybeSubContainer = maybeSubSection.querySelector(
+				queryableId("items"),
+			) as HTMLElement;
+			const maybeSubList = maybeSubContainer.children;
+			const indicator = maybeSubList[maybeSubList.length - 1] as HTMLElement;
+			const indicatorHref = (indicator.firstElementChild as HTMLAnchorElement)
+				.href;
+			switch (indicatorHref) {
+				case undefined:
+					res([maybeSubContainer, indicator]);
+					break;
+				case "https://www.youtube.com/feed/channels":
+					res([maybeSubContainer, null]);
+					break;
+				default:
+					rej("has no subscriptions");
+			}
+			navBar.removeAttribute(OPENED);
+			navBar.style.removeProperty("display");
+			userInfo.style.removeProperty("display");
+		});
+	});
+};
+
+const expandSubscription = async (
+	expander: Element | null,
+	list: HTMLElement,
+) => {
+	if (expander) {
+		const trigger: HTMLElement = getElementFromTag(
+			EXPANSION_TRIGGER_TAG,
+			expander,
+		);
+		if (trigger === null) return;
+		trigger.click();
+		const expandedItems = document.getElementById(EXPANDABLE_ID);
+		list.append(...expandedItems.children);
+		expander.remove();
+	}
 	await setSubscriptionOrder(list);
 	sortSubscriptions(list);
 };
@@ -101,12 +125,10 @@ const main = () => {
 			switch (type) {
 				case "initialize":
 					initUserInfo()
-						.then((userInfo) => initializeNavBar(flag, userInfo))
-						.then(async (expander: HTMLElement) => {
+						.then((userInfo) => openLeftPane(flag, userInfo))
+						.then(checkSubscription)
+						.then(async ([subscriptionList, expander]) => {
 							// expand subscription section
-							const subscriptionList = expander.closest<HTMLElement>(
-								queryableId(SUBSCRIPTION_LIST_ID),
-							);
 							subscriptionList.classList.add(SUBSCRIPTION_LIST_CLASS);
 							await expandSubscription(expander, subscriptionList);
 							await prependExtensionItems(subscriptionList);
