@@ -47,10 +47,18 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 	const { msg } = message;
 	switch (msg) {
 		case "filter": {
-			chrome.storage.session.get("filter", ({ filter }) => {
-				if (!filter) return;
-				sendYSOMessage(msg, true, filter).catch((e) => console.error(e));
-			});
+			chrome.storage.session.get(
+				"filter",
+				({ filter }: { filter: FilterData }) => {
+					if (!filter) return;
+					const { data: cardsStart } = message;
+					if (cardsStart !== null && filter.nextStart > cardsStart) {
+						filter.itemCount = 0;
+						filter.nextStart = 1;
+					}
+					sendYSOMessage(msg, true, filter).catch((e) => console.error(e));
+				},
+			);
 			break;
 		}
 		case "getAllFolders": {

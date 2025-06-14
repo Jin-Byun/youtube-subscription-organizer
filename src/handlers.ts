@@ -23,7 +23,7 @@ import {
 	YOUTUBE_SUBSCRIPTION_PATH,
 	EDIT_MENU_CLASS,
 } from "./constants";
-import { sortSubscriptions, observeContentChange } from "./utils";
+import { sortSubscriptions, subscriptionObserver } from "./utils";
 import {
 	updateUserFolder,
 	getUserStoredFolders,
@@ -38,6 +38,7 @@ import {
 	getAllYSOTabs,
 	getChildChannels,
 	getElementFromId,
+	getElementFromTag,
 } from "./dom";
 
 export async function handleDelete(this: HTMLDivElement, e: MouseEvent) {
@@ -184,6 +185,46 @@ const getFilterItems = (): {
 		itemsPerRow,
 	};
 };
+
+const handleSubscriptionTitle = (
+	isGrid: boolean,
+	firstEl: Element,
+	titleEl: Element,
+	folderName: string,
+	channelTitles: string[],
+) => {
+	const prevTitle = titleEl.textContent;
+	const haveSavedTitle = titleEl.hasAttribute("data-default");
+	if (!haveSavedTitle) {
+		titleEl.setAttribute("data-default", prevTitle);
+	}
+	firstEl.classList.add(FILTER_CLASS);
+	if (isGrid) {
+		titleEl.textContent = `${folderName}: ${prevTitle}`;
+		return;
+	}
+	titleEl.textContent = `${folderName}: Latest`;
+	if (haveSavedTitle) return;
+	const titleContainer = titleEl.closest("#title-container") as HTMLElement;
+	let cloned = titleContainer.nextElementSibling as HTMLElement;
+	if (cloned.id !== "title-container") {
+		cloned = titleContainer.cloneNode(true) as HTMLElement;
+		titleContainer.after(cloned);
+	}
+	titleContainer.style.marginBottom = "3rem";
+	const channelAvatar = getElementFromTag("a", titleContainer);
+	if (channelTitles.includes(prevTitle)) {
+		channelAvatar.style.transform = "translateY(5rem)";
+	} else {
+		titleContainer.style.marginBottom = "1rem";
+		cloned.style.display = "none";
+		channelAvatar.style.display = "none";
+		const contentToHide = titleContainer.parentElement
+			.nextElementSibling as HTMLElement;
+		contentToHide.style.display = "none";
+	}
+};
+
 export const filterContent = async (
 	channelTitles: string[],
 	itemsFiltered: number,
@@ -191,17 +232,45 @@ export const filterContent = async (
 	folderName = "",
 ) => {
 	const { container, videoCards, title, itemsPerRow } = getFilterItems();
+	const isGrid = itemsPerRow > 0;
 	if (start === 1) {
 		container.classList.add(FILTER_CLASS);
 		if (!(await hasMutationObservers())) {
-			setMutationObservers(observeContentChange(container, videoCards[1]));
+			const primaryContainer = container.closest("#primary");
+			setMutationObservers(subscriptionObserver(primaryContainer));
 		}
-		videoCards[0].classList.add(FILTER_CLASS);
-		title.textContent = `${folderName}: ${title.textContent}`;
+		handleSubscriptionTitle(
+			isGrid,
+			videoCards[0],
+			title,
+			folderName,
+			channelTitles,
+		);
+	}
+	let idx = start;
+	if (!isGrid) {
+		for (
+			;
+			videoCards[idx] && videoCards[idx].tagName !== VIDEOCARD_LOADER_TAG;
+			idx++
+		) {
+			const card = videoCards[idx];
+			const cardTitle = getElementFromId<HTMLSpanElement>(TITLE_ID, card);
+			if (!cardTitle || !channelTitles.includes(cardTitle.textContent)) {
+				card.classList.remove(FILTER_CLASS);
+				continue;
+			}
+			card.classList.add(FILTER_CLASS);
+		}
+		setFilter(channelTitles, 0, idx, folderName);
+		return;
 	}
 	let itemCount = itemsFiltered;
-	let idx = start;
-	for (; videoCards[idx].tagName !== VIDEOCARD_LOADER_TAG; idx++) {
+	for (
+		;
+		videoCards[idx] && videoCards[idx].tagName !== VIDEOCARD_LOADER_TAG;
+		idx++
+	) {
 		const card = videoCards[idx];
 		card.removeAttribute(FIRST_COLUMN);
 		const anchor = getElementFromId<HTMLAnchorElement>(
@@ -216,7 +285,7 @@ export const filterContent = async (
 		if (itemCount % itemsPerRow === 0) card.setAttribute(FIRST_COLUMN, "");
 		itemCount++;
 	}
-	setFilter(channelTitles, itemCount, idx);
+	setFilter(channelTitles, itemCount, idx, folderName);
 };
 
 export const reorganizeFilter = () => {
@@ -235,7 +304,22 @@ export const reorganizeFilter = () => {
 export const unfilterContent = () => {
 	removeFilter();
 	const { container, videoCards, title, itemsPerRow } = getFilterItems();
-	title.textContent = title.textContent.split(" ").at(-1);
+	// restore title to default
+	title.textContent = title.getAttribute("data-default");
+	title.removeAttribute("data-default");
+	if (itemsPerRow === 0) {
+		const titleContainer = title.closest("#title-container") as HTMLElement;
+		const cloned = titleContainer.nextElementSibling as HTMLElement;
+		if (cloned.id === "title-container") {
+			cloned.remove();
+		}
+		titleContainer.removeAttribute("style");
+		const channelAvatar = getElementFromTag("a", titleContainer);
+		channelAvatar.removeAttribute("style");
+		const content = titleContainer.parentElement
+			.nextElementSibling as HTMLElement;
+		content.removeAttribute("style");
+	}
 	const contentLength = videoCards.length;
 	let idx = 0;
 	container.classList.remove(FILTER_CLASS);

@@ -7,9 +7,7 @@ import {
 	OPENED,
 	ORDER_TAG,
 	POPUP_CONTAINER_TAG,
-	SUBSCRIPTION_EXPANDER,
 	SUBSCRIPTION_LIST_CLASS,
-	SUBSCRIPTION_LIST_ID,
 	SUBSCRIPTION_TAB_LABEL,
 	USER_INFO_BUTTON_ID,
 	USER_INFO_HANDLE_ID,
@@ -94,7 +92,7 @@ const expandSubscription = async (
 		);
 		if (trigger === null) return;
 		trigger.click();
-		const expandedItems = document.getElementById(EXPANDABLE_ID);
+		const expandedItems = await waitForElementLoad(EXPANDABLE_ID);
 		list.append(...expandedItems.children);
 		expander.remove();
 	}
@@ -115,6 +113,8 @@ const initUserInfo = async (): Promise<HTMLElement> => {
 	return userInfo;
 };
 
+let initialized = false;
+
 const main = () => {
 	chrome.runtime.onMessage.addListener(
 		async (
@@ -124,6 +124,8 @@ const main = () => {
 		): Promise<void> => {
 			switch (type) {
 				case "initialize":
+					if (initialized) return;
+					initialized = true;
 					initUserInfo()
 						.then((userInfo) => openLeftPane(flag, userInfo))
 						.then(checkSubscription)
@@ -156,7 +158,12 @@ const main = () => {
 					response(!!getSubList());
 					break;
 				case "filter": {
-					await filterContent(data.titles, data.itemCount, data.nextStart);
+					await filterContent(
+						data.titles,
+						data.itemCount,
+						data.nextStart,
+						data.folderName,
+					);
 					break;
 				}
 				case "rowChange":

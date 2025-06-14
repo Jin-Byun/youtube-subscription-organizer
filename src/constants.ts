@@ -2,6 +2,7 @@ export type FilterData = {
 	titles: string[];
 	itemCount: number;
 	nextStart: number;
+	folderName: string;
 };
 
 export const MessageTypeList: string[] = [

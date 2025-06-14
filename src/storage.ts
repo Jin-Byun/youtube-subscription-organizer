@@ -88,18 +88,20 @@ export const setSubscriptionOrder = (
 export const setUserFolder = async (data: FolderData) =>
 	syncSetter(await UserStorageId(), data);
 
-export const setMutationObservers = (obs: MutationObserver[]): Promise<void> =>
+export const setMutationObservers = (obs: MutationObserver): Promise<void> =>
 	sessionSetter(OBSERVER_KEY, obs);
 
 export const setFilter = (
 	titles: string[],
 	itemCount: number,
 	nextStart: number,
+	folderName: string,
 ): Promise<void> =>
 	sessionSetter(FILTER_KEY, {
 		titles,
 		itemCount,
 		nextStart,
+		folderName,
 	});
 
 /** Others */
