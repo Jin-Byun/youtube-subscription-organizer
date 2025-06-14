@@ -28,9 +28,6 @@ export type SingleDOMGetter =
 	| typeof document.getElementById
 	| typeof document.querySelector;
 
-export const TRUE = "true";
-export const FALSE = "false";
-
 /** KEYS */
 export const STORAGE_KEY = "YSO-KEY";
 export const SUB_ORDER_KEY = "YSO-SUBSCRIPTION-ORDER";
@@ -81,8 +78,7 @@ export const SUBSCRIPTION_CONTENT_CONTAINER =
 	'ytd-two-column-browse-results-renderer[page-subtype="subscriptions"] #contents';
 export const SUBSCRIPTION_EXPANDER =
 	"ytd-guide-collapsible-entry-renderer.ytd-guide-section-renderer";
-export const SUBSCRIPTION_TAB_LABEL =
-	'ytd-mini-guide-entry-renderer[aria-label="Subscriptions"]';
+export const SUBSCRIPTION_TAB_LABEL = 'a#endpoint[title="Subscriptions"]';
 
 /** URLs */
 export const FOLDER_IMG_URL = chrome.runtime.getURL("folder.svg");

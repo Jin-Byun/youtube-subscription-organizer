@@ -26,13 +26,13 @@ import {
 	setCurrId,
 	deleteChannelFromFolder,
 } from "./storage";
-import { filterContent, reorganizeFilter } from "./handlers";
 import {
 	getAllChildFolders,
 	getElementFromTag,
 	getSubList,
 	queryableId,
 } from "./dom";
+import { filterContent, reorganizeFilter } from "./toggler";
 
 const openLeftPane = (
 	isLoaded: boolean,
@@ -139,10 +139,12 @@ const main = () => {
 							const header =
 								subscriptionTabLabel.firstElementChild as HTMLElement;
 							header.style.cursor = "pointer";
-							const subscriptionInteractionTab =
-								document.querySelector<HTMLElement>(SUBSCRIPTION_TAB_LABEL);
+							const anchorToSubscription = document.querySelector<HTMLElement>(
+								SUBSCRIPTION_TAB_LABEL,
+							);
+							console.log(anchorToSubscription);
 							header.addEventListener("click", () => {
-								subscriptionInteractionTab.click();
+								anchorToSubscription.click();
 							});
 							subscriptionTabLabel.style.display = "flex";
 							subscriptionTabLabel.style.alignItems = "center";

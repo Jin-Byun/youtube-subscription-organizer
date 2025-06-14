@@ -11,27 +11,22 @@ import {
 	LABEL_DUPLICATE,
 	HIDE_CLASS,
 	ORDER_TAG,
-	TRUE,
 	EDIT_MENU_CLASS,
 	NEW_BUTTION_ID,
 	CHANNEL_TAG,
 } from "./constants";
 import { getElementFromTag } from "./dom";
-import {
-	handleDelete,
-	handleEdit,
-	handleSave,
-	handleCancel,
-	deactivateToggleChannel,
-	activateToggleChannel,
-	toggleCollapsible,
-	toggleOption,
-} from "./handlers";
+import { handleDelete, handleEdit, handleSave, handleCancel } from "./handlers";
 import {
 	updateUserFolder,
 	getUserStoredFolders,
 	getSubscriptionOrder,
 } from "./storage";
+import {
+	toggleChannelContextMenu,
+	toggleCollapsible,
+	toggleOption,
+} from "./toggler";
 
 class Component<T extends HTMLElement> {
 	element: T;
@@ -129,7 +124,7 @@ const SaveButton = (subList: Element): HTMLButtonElement =>
 					return displayPlaceholderMessage(labelDiv, LABEL_DUPLICATE);
 				}
 				const selectedSubs = subList.querySelectorAll(
-					`[${ADD_TO_FOLDER}="${TRUE}"]`,
+					`[${ADD_TO_FOLDER}="true"]`,
 				);
 				if (selectedSubs.length === 0) {
 					return displayPlaceholderMessage(labelDiv, LABEL_NOCHANNEL);
@@ -137,7 +132,7 @@ const SaveButton = (subList: Element): HTMLButtonElement =>
 
 				const subFolder = subscriptionFolder(title);
 
-				deactivateToggleChannel(subList.children);
+				toggleChannelContextMenu(subList);
 				subFolder.style.setProperty(NUM_CHANNEL, `${selectedSubs.length}`);
 				subFolder.append(...selectedSubs);
 
@@ -178,7 +173,7 @@ export const createNewFolderButton = (list: Element): HTMLButtonElement =>
 		.setId(NEW_BUTTION_ID)
 		.addInnerText("+")
 		.addEventListener("click", () => {
-			activateToggleChannel(list.children);
+			toggleChannelContextMenu(list);
 			list.prepend(
 				new Component<HTMLDivElement>().addClass(FOLDER_CLASS, "new").append(
 					new Component<HTMLDivElement>()
